@@ -1,6 +1,10 @@
   let solveBtn = document.getElementById('solve-btn')
-  
+   
 
+
+// in-game sounds
+let swooshSound = new Audio('sounds/swish_quiet.mp3')
+let foundationDrop = new Audio('sounds/foundation_drop.mp3')
   //variabel to add event listeners to all piles using forEach
 var dropPilesEl = document.querySelectorAll('.piles')
 // to add event listeners to all foundation piles using forEach
@@ -241,7 +245,7 @@ console.log('yTranslation')
 console.log(yTranslation)
 
 cardObject.style.transform = `translate(${xTranslation}px, ${yTranslation}px)`
-
+swooshSound.play()
 
 
 // append card
@@ -256,9 +260,10 @@ cardObject.style.transform = `translate(${xTranslation}px, ${yTranslation}px)`
 
 // if current index argument is not the highest index of the map array
 // if(mapIndex < map.length -1)
-if(mapIndex < map.length -1)
+if(mapIndex < map.length)
 {
 
+  
 // wait two seconds, then increment index, and re-run function with next index 
   setTimeout(() => {
     // just prior to appending card change style class to that which removes its cascade height so it sits directly on top of the previous card. 
@@ -269,13 +274,8 @@ if(mapIndex < map.length -1)
     
     
     // now append the card. Because of the tiny duration between reset of translations and card append; the movement that the card will do back to the end of a drop pile from the foundation prior to getting appended will be imperceptible. I assume this in occuring within a few thousandths of a second. 
+    foundationDrop.play()
     allFoundationElements[foundationIndex].appendChild(cardObject)
-console.log(mapIndex)
-    // show WINNER MESSAGE after last card is appended
-    if(mapIndex === map.length - 1){
-      alert('WELL DONE! game is solved')
-    }
-
 
     // increase the index to get the next step in the map array and repeat the process for the next card (if the index is still a valid index for the array)
     mapIndex ++
@@ -284,7 +284,7 @@ console.log(mapIndex)
 
 }else{
   console.log('mapping complete')
-  solveBtn.style.display = 'none'
+
 
 
 }
@@ -293,100 +293,10 @@ console.log(mapIndex)
   moveCard(0)
 
 
-/*
-
-    map.forEach(step =>{
-      indexOfDropPile = step.drop_pile_index;
-      foundationIndex = step.foundation_pile_index
-      dropObjValue = step.moved_values.drop_pile_end_card
-  
-      // get card 
-      console.log('map step')
-  console.log(step)
-      console.log('card object')
-      let cardObject = allPileElements[indexOfDropPile].lastChild
-      console.log(cardObject)
-
-
-      // get viewport position of card 
-      let cardCoords = cardObject.getBoundingClientRect()
-
-      
-      // get x/y coordinates of card 
-      let cardXYObj = {
-        'x':cardCoords.x,
-        'y':cardCoords.y
-      }
-
-
-   // get viewport position of foundation 
-let foundationCoords = allFoundationElements[foundationIndex].getBoundingClientRect()
-
-let foundationXYObj = {
-  'x':foundationCoords.x,
-  'y':foundationCoords.y
-}
-
-
-
-let xTranslation = foundationXYObj.x - cardXYObj.x 
-let yTranslation = foundationXYObj.y - cardXYObj.y 
-// destination foundation element
-console.log('foundation pile to have card appended')
-console.log(allFoundationElements[foundationIndex])
-// check translations
-console.log('x/y coordinates of transitioning card')
-console.log(cardXYObj)
-console.log('x/y coordinates of destination foundation')
-console.log(foundationXYObj)
-console.log('xTranslation')
-console.log(xTranslation)
-console.log('yTranslation')
-console.log(yTranslation)
-
-
-  // console.log(allPileElements[dropPileIndex])
-
-  mapIndex++
-  // send coordinates as well
-
-  // DROP FUNCTION -------------------------------------
-  // delayCardDrop(mapIndex, indexOfDropPile, foundationIndex, xTranslation, yTranslation)
-  // append card to foundation pile
-  
-    })
-*/
-
 
 
 
   }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -489,7 +399,7 @@ console.log(yTranslation)
   
     // all drop piles have been re-located to foundation piles and the solve is complete
     alert('SOLVE COMPLETE')
-  
+   
     console.log('solution map array')
     console.log(solutionMapArray)
   
@@ -545,6 +455,7 @@ console.log(yTranslation)
   
   // Send initial index value to examine first foundation pile
   solveBtn.addEventListener('click', () =>{
+    solveBtn.style.display = 'none'
     // console.log('running solve')
     pickFoundation(0)
   })

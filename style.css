@@ -182,7 +182,7 @@
     /* styling for card piles*/
     .piles{
         height: fit-content;
-        width: 11vw;
+        width: 10vw;
             border-top: 1px;
         opacity: 1;
         margin-top: 3vh;
@@ -282,46 +282,89 @@
     
     
     @media(orientation:landscape){
+
+        .stack-one, .stack-two{
+            width: 100%;
+            height: fit-content;
+            background-color: rgba(214, 104, 84, 0);
+            display: flex;
+            flex-direction: row;
+            justify-content: space-around;
+       
+        }
+
+        .foundation-pile{
+            position: relative;
+            background-image: url();
+        background-size:100% 100%;
+        background-repeat: no-repeat;
+        
+            border-radius: 12px;
+
+       
+            padding: 30px !important;
+           width: 5vw !important;
+           height: 6vw !important;
+            margin:0vw;
+            border-width: 1px;
+            border-color: rgba(7, 7, 7, 0.2);
+         
+            background-color:    rgba(182, 220, 226, 0.952);
+            box-shadow: 2px 2px 4px white;
+            border-style: solid;
+        
+        }
+        
+        .foundationCardEl{
+            position: absolute;
+            width: 5vw;
+            height: auto;
+            margin-top: 0vw;
+            border-width: 0.1vw;
+            display: inline-block; 
+      box-shadow: 2px 2px 5px rgb(117, 117, 117);
+        }
+        
+                /* div holding finishing suits*/
+    #foundation-stacks{
+    
+        position:relative;
+        display: flex;
+        flex-direction: row;
+        height: fit-content;
+        
+        margin-top: 0vw;
+        width: 40vw;
+        height: fit-content;
+        background-color: rgba(55, 42, 243, 0);
+     
+          
+    }
     
         .cardEl{
             width: 5.5vw;
             margin-top: -7vw;
         }
     
-        .cardElWaste{
-            width: 5.5vw;
-            margin-top: -7vw;
-        }
+
     
         .piles{
             width: 7vw;
             margin-top: 3vh;
-            padding: 10vw 1vw 3vw 1vw;}
+            padding: 2vw 1vw 3vw 1vw;}
     
             .foundation-pile{
                 height: fit-content;
-                margin-top: -12vw;
+                margin-top:0;
                 padding: 1vw 1vw 2vw 1vw;
                width: 7vw;
-                margin-left: 2vw;
-                margin-bottom: 2vw;
+             margin: 1vw;
                   }
     
-                  #top-piles-container{
-                    justify-content: space-between;
-                          width: 75vw;
-                    margin: auto;
-                    margin-bottom: -15vh;
-                    margin-top: 1vh;
-                  }
+       
     
-                  #remain-waste{
-                    width: 25vw;
-                             }
-    #deal-btn{
-    height: 2vw;
-     }
-    
+  
+
      #button-div{width: 15vw; height: 6vw;
         display: none;
           }
@@ -330,15 +373,10 @@
             margin-top: -1vw;
         width: 72vw;
          margin: auto;
-        padding-bottom: 2vw;
+        padding-bottom: 1vw;
                 }
     
-        .remain-pile{
-            margin-top: -9vw;
-            padding: 10vw 1vw 0vw 1vw;
-             width: 7vw;
-            opacity: 1;   
-        }
+
     
         .piles{
             width: 6vw;
@@ -350,8 +388,8 @@
             #game-container{
                 position: absolute;
                 background-image: url(./images/green\ background.png);
-                      top: 8vh;  
-                      padding-top: 15vh;    
+                      top: -3vh;  
+                      padding-top: 0.5vh;    
             }
         
     
