@@ -49,25 +49,14 @@ let scenarioOneBtn = document.getElementById('scenario-1-btn');
 let scenarioTwoBtn = document.getElementById('scenario-2-btn');
 let scenarioThreeBtn = document.getElementById('scenario-3-btn');
 
+let scenarioBtnsArray = [scenarioOneBtn, scenarioTwoBtn, scenarioThreeBtn]
+
   // scenario buttons container 
   let scenariosBtns = document.getElementById('scenario-btns');
 
 
     // scenario buttons 
 let refreshBtn = document.getElementById('refresh-btn');
-  // // test to delay loop
-  // for(let i = 1; i < 11; i++){
-  //   setDelay(i)
-  // }
-
-
-
-  // function setDelay(i){
-  //   setTimeout(() => {
-  //     console.log(i)
-  //   }, 1000*i);
-  // }
-  // FETCHING EAMPLE SOLVE SITUATION FOR TESTING SOLVE BUTTON - 
 
   // variables for foundation trackers and drop pile trackers in solve scenario
   let dropPilesScenario = [];
@@ -75,22 +64,17 @@ let refreshBtn = document.getElementById('refresh-btn');
   
 
 
-
-    function scenarioOne(){
-
-      fetch('/solve_scenario.json')
-      .then(res => res.json())
-      .then(data =>{
-  
-        dropPilesScenario.push(...data.drop_piles)
-  foundationPilesScenario.push(...data.foundations)
-          getArrays(dropPilesScenario, foundationPilesScenario)
-      })
-    }
-
-    function scenarioTwo(){
-
-      fetch('/solve_scenario_2.json')
+// FUNCTION FOR CHOOSING A SPECIFIC SOLVE SCENARIO, depending on which button is pressed. 
+    function scenarioNumber(number){
+let URL; // the url variable which will change depending on the number argument's value
+      switch(number){
+        case 0: URL = '/solve_scenario.json'
+        break;
+        case 1: URL = '/solve_scenario_2.json'
+        break;
+        default: URL = '/solve_scenario_3.json'
+      }
+      fetch(URL)
       .then(res => res.json())
       .then(data =>{
   
@@ -101,46 +85,17 @@ let refreshBtn = document.getElementById('refresh-btn');
     }
 
     
-    function scenarioThree (){
-
-      fetch('/solve_scenario_3.json')
-      .then(res => res.json())
-      .then(data =>{
-  
-        dropPilesScenario.push(...data.drop_piles)
-  foundationPilesScenario.push(...data.foundations)
-          getArrays(dropPilesScenario, foundationPilesScenario)
+// ADD EVENT LISTENER TO EACH BUTTON FOR A SPECIFIC SOLVE SCENARIO
+    scenarioBtnsArray.forEach((button, index) =>{
+      
+      // add event listener to control other buttons and add function
+      button.addEventListener('click', () =>{
+        scenariosBtns.style.display = 'none'
+        solveBtn.style.display = 'block'
+        // the button's index is used as parameter to the scenario function which decides which scenario to fetched based on the index number
+     scenarioNumber(index)
       })
-    }
-    
-
-
-// event  listeners for scenario buttons 
-scenarioOneBtn.addEventListener('click', () =>{
-  scenariosBtns.style.display = 'none'
-  solveBtn.style.display = 'block'
-  scenarioOne()
-})
-
-scenarioTwoBtn.addEventListener('click', () =>{
-  scenariosBtns.style.display = 'none'
-  solveBtn.style.display = 'block'
-  scenarioTwo()
-})
-
-scenarioThreeBtn.addEventListener('click', () =>{
-  scenariosBtns.style.display = 'none'
-  solveBtn.style.display = 'block'
-  scenarioThree()
-})
-
-// refresh page 
- refreshBtn.addEventListener('click', () =>{
-location.reload()
-}) 
-
-
-
+    })
 
 
 
@@ -148,6 +103,45 @@ let dropPileTracker = []
 let foundationTracker = []
 // this keeps a record of all card movements in the solve. 
 let solutionMapArray = []
+
+// variable for foundation top card value
+let lastFoundationCard;
+// variable showing how many cards are added to a selected foundation pile from the drop piles that are checked to see if their end card can legally added to the foundation pile. 
+let totalCardsAdded = 0;
+
+
+// APP RESET - reset button appears when
+ refreshBtn.addEventListener('click', () =>{
+
+  // clear all arrays
+  dropPilesScenario = [];
+  foundationPilesScenario = [];
+  dropPileTracker = []
+foundationTracker = []
+solutionMapArray = []
+
+// clear all global variables
+lastFoundationCard = 0;
+totalCardsAdded = 0;
+
+// set default visibility on buttons
+solveBtn.style.display = 'none'
+refreshBtn.style.display = 'none'
+scenariosBtns.style.display = 'flex'
+
+// remove all cards from all foundation piles
+allFoundationElements.forEach(foundation =>{
+  while(foundation.firstChild){
+    foundation.removeChild(foundation.firstChild)
+  }
+})
+
+}) 
+
+
+
+
+
 
 
 
@@ -234,8 +228,7 @@ function populateFoundation(foundations){
 
 
 
-  let lastFoundationCard;
-let totalCardsAdded = 0;
+
 
 
 
@@ -246,27 +239,16 @@ let totalCardsAdded = 0;
     
 // function for placing cards into solved state
 const placeAllCards = (map) =>{
-  /*
-  BROAD MOVEMENTS:
-  -get the pile index of the map object under examination
-  - using the correct pile get the card which corresponds to the object
-  - append the card from the end of the drop pile to the end of the foundation pile
-  
-  */
 
-  
-  // GOING TO CHANGE THIS TO A RECURSIVE METHOD WITH A DELAY ON EACH CARD DROP
-  
-  let indexOfDropPile;
+    let indexOfDropPile;
   let foundationIndex;
   let dropObjValue;
-  let dropCardValue;
-  let mapIndex = 0;
+
+
 
 
 function moveCard(mapIndex){
-console.log('current map index')
-console.log(mapIndex)
+
 
 let mapDetails = map[mapIndex]
 
@@ -279,7 +261,7 @@ foundationIndex = mapDetails.foundation_pile_index
 dropObjValue = mapDetails.moved_values.drop_pile_end_card
 
 // get card object using index
-console.log('card object')
+
 let cardObject = allPileElements[indexOfDropPile].lastChild
 
 
@@ -378,9 +360,7 @@ if(mapIndex < map.length)
 
   // AUTO-COMPLETE CHECK TO SEE IF ALL CARDS ARE FACE UP
   function comparePileCard(fPile, index){
-  
-  console.log('foundation')
-  
+   
   // variable for the number of empty drop pile trackers
   let totalEmptyDropPiles = 0;
   // variable for foundation end card value
@@ -396,7 +376,7 @@ if(mapIndex < map.length)
     dropPileTracker.forEach((dropPile, dropIndex) =>{
   // only check non-empty drop piles;  if pile is empty, increment totalEmptyDropPiles variable in else part of this condition
       if(dropPile.length > 0){ 
-        console.log(dropPile, dropIndex)
+
     // get the raw value of the last card of the current drop pile 
         lastDropPileCardValue = dropPile[dropPile.length -1].primary_card.card
   
@@ -427,7 +407,7 @@ if(mapIndex < map.length)
           'foundation_pile_index': index,
         }
   
-        console.log(moveDetails)
+
   
           
           
