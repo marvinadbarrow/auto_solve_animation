@@ -1,0 +1,654 @@
+{
+    "drop_piles": [
+        [
+            {
+                "primary_card": {
+                    "card": 52,
+                    "origin": "waste-pile",
+                    "destination": "pile-one",
+                    "group_elements": ""
+                },
+                "when_flipped": 40,
+                "when_moved": 40,
+                "total_selected": 1,
+                "principal_origin": "pick-pile"
+            },
+            {
+                "primary_card": {
+                    "card": 47,
+                    "origin": "pile-four",
+                    "destination": "pile-one",
+                    "group_elements": ""
+                },
+                "when_flipped": 32,
+                "when_moved": 41,
+                "total_selected": 1,
+                "principal_origin": "pile-four"
+            },
+            {
+                "primary_card": {
+                    "card": 41,
+                    "origin": "waste-pile",
+                    "destination": "pile-one",
+                    "group_elements": ""
+                },
+                "when_flipped": 58,
+                "when_moved": 58,
+                "total_selected": 1,
+                "principal_origin": "pick-pile"
+            },
+            {
+                "primary_card": {
+                    "card": 38,
+                    "origin": "pile-seven",
+                    "destination": "pile-one",
+                    "group_elements": 3
+                },
+                "total_selected": 3,
+                "when_flipped": 2,
+                "when_moved": 59,
+                "principal_origin": "pile-seven"
+            },
+            {
+                "primary_card": {
+                    "card": 36,
+                    "origin": "pile-seven",
+                    "destination": "pile-one",
+                    "group_elements": 3
+                },
+                "total_selected": 3,
+                "when_flipped": 15,
+                "when_moved": 60,
+                "principal_origin": "pile-five"
+            },
+            {
+                "primary_card": {
+                    "card": 30,
+                    "origin": "pile-seven",
+                    "destination": "pile-one",
+                    "group_elements": 3
+                },
+                "total_selected": 3,
+                "when_flipped": 53,
+                "when_moved": 61,
+                "principal_origin": "pile-six"
+            },
+            {
+                "primary_card": {
+                    "card": 28,
+                    "origin": "waste-pile",
+                    "destination": "pile-one",
+                    "group_elements": ""
+                },
+                "when_flipped": 79,
+                "when_moved": 79,
+                "total_selected": 1,
+                "principal_origin": "pick-pile"
+            },
+            {
+                "primary_card": {
+                    "card": 23,
+                    "origin": "pile-five",
+                    "destination": "pile-one",
+                    "group_elements": 3
+                },
+                "total_selected": 3,
+                "when_flipped": 17,
+                "when_moved": 80,
+                "principal_origin": "pile-five"
+            },
+            {
+                "primary_card": {
+                    "card": 17,
+                    "origin": "pile-three",
+                    "destination": "pile-one",
+                    "group_elements": 2
+                },
+                "total_selected": 2,
+                "when_flipped": 49,
+                "when_moved": 153,
+                "principal_origin": "pile-three"
+            },
+            {
+                "primary_card": {
+                    "card": 15,
+                    "origin": "pile-three",
+                    "destination": "pile-one",
+                    "group_elements": 2
+                },
+                "total_selected": 2,
+                "when_flipped": 0,
+                "when_moved": 154,
+                "principal_origin": "pile-three"
+            }
+        ],
+        [
+            {
+                "primary_card": {
+                    "card": 50,
+                    "origin": "pile-five",
+                    "destination": "pile-two",
+                    "group_elements": 5
+                },
+                "total_selected": 5,
+                "when_flipped": 0,
+                "when_moved": 11,
+                "principal_origin": "pile-five"
+            },
+            {
+                "primary_card": {
+                    "card": 45,
+                    "origin": "pile-five",
+                    "destination": "pile-two",
+                    "group_elements": 5
+                },
+                "total_selected": 5,
+                "when_flipped": 7,
+                "when_moved": 12,
+                "principal_origin": "pick-pile"
+            },
+            {
+                "primary_card": {
+                    "card": 43,
+                    "origin": "pile-five",
+                    "destination": "pile-two",
+                    "group_elements": 5
+                },
+                "total_selected": 5,
+                "when_flipped": 0,
+                "when_moved": 13,
+                "principal_origin": "pile-two"
+            },
+            {
+                "primary_card": {
+                    "card": 40,
+                    "origin": "pile-five",
+                    "destination": "pile-two",
+                    "group_elements": 5
+                },
+                "total_selected": 5,
+                "when_flipped": 0,
+                "when_moved": 14,
+                "principal_origin": "pile-four"
+            },
+            {
+                "primary_card": {
+                    "card": 34,
+                    "origin": "pile-five",
+                    "destination": "pile-two",
+                    "group_elements": 5
+                },
+                "total_selected": 5,
+                "when_flipped": 9,
+                "when_moved": 15,
+                "principal_origin": "pile-two"
+            },
+            {
+                "primary_card": {
+                    "card": 29,
+                    "origin": "pile-five",
+                    "destination": "pile-two",
+                    "group_elements": ""
+                },
+                "when_flipped": 16,
+                "when_moved": 17,
+                "total_selected": 1,
+                "principal_origin": "pile-five"
+            },
+            {
+                "primary_card": {
+                    "card": 27,
+                    "origin": "waste-pile",
+                    "destination": "pile-two",
+                    "group_elements": ""
+                },
+                "when_flipped": 18,
+                "when_moved": 18,
+                "total_selected": 1,
+                "principal_origin": "pick-pile"
+            },
+            {
+                "primary_card": {
+                    "card": 24,
+                    "origin": "pile-one",
+                    "destination": "pile-two",
+                    "group_elements": ""
+                },
+                "when_flipped": 0,
+                "when_moved": 19,
+                "total_selected": 1,
+                "principal_origin": "pile-one"
+            },
+            {
+                "primary_card": {
+                    "card": 18,
+                    "origin": "waste-pile",
+                    "destination": "pile-two",
+                    "group_elements": ""
+                },
+                "when_flipped": 34,
+                "when_moved": 34,
+                "total_selected": 1,
+                "principal_origin": "pick-pile"
+            }
+        ],
+        [
+            {
+                "primary_card": {
+                    "card": 22,
+                    "origin": "pile-three",
+                    "destination": "",
+                    "group_elements": ""
+                },
+                "total_selected": "",
+                "when_flipped": 154,
+                "when_moved": "",
+                "principal_origin": "pile-three"
+            }
+        ],
+        [
+            {
+                "primary_card": {
+                    "card": 51,
+                    "origin": "waste-pile",
+                    "destination": "pile-four",
+                    "group_elements": ""
+                },
+                "when_flipped": 51,
+                "when_moved": 51,
+                "total_selected": 1,
+                "principal_origin": "pick-pile"
+            },
+            {
+                "primary_card": {
+                    "card": 48,
+                    "origin": "waste-pile",
+                    "destination": "pile-four",
+                    "group_elements": ""
+                },
+                "when_flipped": 52,
+                "when_moved": 52,
+                "total_selected": 1,
+                "principal_origin": "pick-pile"
+            },
+            {
+                "primary_card": {
+                    "card": 42,
+                    "origin": "pile-six",
+                    "destination": "pile-four",
+                    "group_elements": ""
+                },
+                "when_flipped": 35,
+                "when_moved": 53,
+                "total_selected": 1,
+                "principal_origin": "pile-six"
+            },
+            {
+                "primary_card": {
+                    "card": 37,
+                    "origin": "pile-seven",
+                    "destination": "pile-four",
+                    "group_elements": ""
+                },
+                "when_flipped": 124,
+                "when_moved": 125,
+                "total_selected": 1,
+                "principal_origin": "pile-seven"
+            },
+            {
+                "primary_card": {
+                    "card": 35,
+                    "origin": "waste-pile",
+                    "destination": "pile-four",
+                    "group_elements": ""
+                },
+                "when_flipped": 156,
+                "when_moved": 156,
+                "total_selected": 1,
+                "principal_origin": "pick-pile"
+            },
+            {
+                "primary_card": {
+                    "card": 32,
+                    "origin": "waste-pile",
+                    "destination": "pile-four",
+                    "group_elements": ""
+                },
+                "when_flipped": 161,
+                "when_moved": 161,
+                "total_selected": 1,
+                "principal_origin": "pick-pile"
+            }
+        ],
+        [
+            {
+                "primary_card": {
+                    "card": 49,
+                    "origin": "waste-pile",
+                    "destination": "pile-five",
+                    "group_elements": ""
+                },
+                "when_flipped": 93,
+                "when_moved": 93,
+                "total_selected": 1,
+                "principal_origin": "pick-pile"
+            },
+            {
+                "primary_card": {
+                    "card": 46,
+                    "origin": "waste-pile",
+                    "destination": "pile-five",
+                    "group_elements": ""
+                },
+                "when_flipped": 107,
+                "when_moved": 107,
+                "total_selected": 1,
+                "principal_origin": "pick-pile"
+            },
+            {
+                "primary_card": {
+                    "card": 44,
+                    "origin": "waste-pile",
+                    "destination": "pile-five",
+                    "group_elements": ""
+                },
+                "when_flipped": 120,
+                "when_moved": 120,
+                "total_selected": 1,
+                "principal_origin": "pick-pile"
+            },
+            {
+                "primary_card": {
+                    "card": 39,
+                    "origin": "pile-seven",
+                    "destination": "pile-five",
+                    "group_elements": 2
+                },
+                "total_selected": 2,
+                "when_flipped": 61,
+                "when_moved": 121,
+                "principal_origin": "pile-seven"
+            },
+            {
+                "primary_card": {
+                    "card": 33,
+                    "origin": "pile-seven",
+                    "destination": "pile-five",
+                    "group_elements": 2
+                },
+                "total_selected": 2,
+                "when_flipped": 89,
+                "when_moved": 122,
+                "principal_origin": "pick-pile"
+            },
+            {
+                "primary_card": {
+                    "card": 31,
+                    "origin": "pile-seven",
+                    "destination": "pile-five",
+                    "group_elements": ""
+                },
+                "when_flipped": 122,
+                "when_moved": 123,
+                "total_selected": 1,
+                "principal_origin": "pile-seven"
+            },
+            {
+                "primary_card": {
+                    "card": 25,
+                    "origin": "waste-pile",
+                    "destination": "pile-five",
+                    "group_elements": ""
+                },
+                "when_flipped": 129,
+                "when_moved": 129,
+                "total_selected": 1,
+                "principal_origin": "pick-pile"
+            }
+        ],
+        [
+            {
+                "primary_card": {
+                    "card": 26,
+                    "origin": "pile-six",
+                    "destination": "",
+                    "group_elements": ""
+                },
+                "total_selected": "",
+                "when_flipped": 55,
+                "when_moved": "",
+                "principal_origin": "pile-six"
+            },
+            {
+                "primary_card": {
+                    "card": 21,
+                    "origin": "waste-pile",
+                    "destination": "pile-six",
+                    "group_elements": ""
+                },
+                "when_flipped": 158,
+                "when_moved": 158,
+                "total_selected": 1,
+                "principal_origin": "pick-pile"
+            },
+            {
+                "primary_card": {
+                    "card": 19,
+                    "origin": "waste-pile",
+                    "destination": "pile-six",
+                    "group_elements": ""
+                },
+                "when_flipped": 160,
+                "when_moved": 160,
+                "total_selected": 1,
+                "principal_origin": "pick-pile"
+            },
+            {
+                "primary_card": {
+                    "card": 13,
+                    "origin": "waste-pile",
+                    "destination": "pile-six",
+                    "group_elements": ""
+                },
+                "when_flipped": 165,
+                "when_moved": 165,
+                "total_selected": 1,
+                "principal_origin": "pick-pile"
+            }
+        ],
+        []
+    ], 
+    "foundations" : [
+        [
+            {
+                "primary_card": {
+                    "card": 1,
+                    "origin": "pile-four",
+                    "destination": "foundation-one",
+                    "group_elements": ""
+                },
+                "when_flipped": 3,
+                "when_moved": 4,
+                "total_selected": 1,
+                "principal_origin": "pile-four"
+            },
+            {
+                "primary_card": {
+                    "card": 5,
+                    "origin": "pile-six",
+                    "destination": "foundation-one",
+                    "group_elements": ""
+                },
+                "when_flipped": 54,
+                "when_moved": 55,
+                "total_selected": 1,
+                "principal_origin": "pile-six"
+            },
+            {
+                "primary_card": {
+                    "card": 9,
+                    "origin": "waste-pile",
+                    "destination": "foundation-one",
+                    "group_elements": ""
+                },
+                "when_flipped": 77,
+                "when_moved": 77,
+                "total_selected": 1,
+                "principal_origin": "pick-pile"
+            }
+        ],
+        [
+            {
+                "primary_card": {
+                    "card": 2,
+                    "origin": "waste-pile",
+                    "destination": "foundation-two",
+                    "group_elements": ""
+                },
+                "when_flipped": 29,
+                "when_moved": 29,
+                "total_selected": 1,
+                "principal_origin": "pick-pile"
+            },
+            {
+                "primary_card": {
+                    "card": 6,
+                    "origin": "waste-pile",
+                    "destination": "foundation-two",
+                    "group_elements": ""
+                },
+                "when_flipped": 30,
+                "when_moved": 30,
+                "total_selected": 1,
+                "principal_origin": "pick-pile"
+            },
+            {
+                "primary_card": {
+                    "card": 10,
+                    "origin": "pile-six",
+                    "destination": "foundation-two",
+                    "group_elements": ""
+                },
+                "when_flipped": 24,
+                "when_moved": 31,
+                "total_selected": 1,
+                "principal_origin": "pick-pile"
+            },
+            {
+                "primary_card": {
+                    "card": 14,
+                    "origin": "pile-four",
+                    "destination": "foundation-two",
+                    "group_elements": ""
+                },
+                "when_flipped": 4,
+                "when_moved": 32,
+                "total_selected": 1,
+                "principal_origin": "pile-four"
+            }
+        ],
+        [
+            {
+                "primary_card": {
+                    "card": 4,
+                    "origin": "pile-seven",
+                    "destination": "foundation-three",
+                    "group_elements": ""
+                },
+                "when_flipped": 0,
+                "when_moved": 2,
+                "total_selected": 1,
+                "principal_origin": "pile-seven"
+            },
+            {
+                "primary_card": {
+                    "card": 8,
+                    "origin": "pile-five",
+                    "destination": "foundation-three",
+                    "group_elements": ""
+                },
+                "when_flipped": 82,
+                "when_moved": 83,
+                "total_selected": 1,
+                "principal_origin": "pile-five"
+            },
+            {
+                "primary_card": {
+                    "card": 12,
+                    "origin": "pile-seven",
+                    "destination": "foundation-three",
+                    "group_elements": ""
+                },
+                "when_flipped": 125,
+                "when_moved": 149,
+                "total_selected": 1,
+                "principal_origin": "pile-seven"
+            },
+            {
+                "primary_card": {
+                    "card": 16,
+                    "origin": "pile-two",
+                    "destination": "foundation-three",
+                    "group_elements": ""
+                },
+                "when_flipped": 1,
+                "when_moved": 151,
+                "total_selected": 1,
+                "principal_origin": "pile-six"
+            },
+            {
+                "primary_card": {
+                    "card": 20,
+                    "origin": "pile-one",
+                    "destination": "foundation-three",
+                    "group_elements": ""
+                },
+                "when_flipped": 48,
+                "when_moved": 152,
+                "total_selected": 1,
+                "principal_origin": "pick-pile"
+            }
+        ],
+        [
+            {
+                "primary_card": {
+                    "card": 3,
+                    "origin": "pile-six",
+                    "destination": "foundation-four",
+                    "group_elements": ""
+                },
+                "when_flipped": 0,
+                "when_moved": 1,
+                "total_selected": 1,
+                "principal_origin": "pile-six"
+            },
+            {
+                "primary_card": {
+                    "card": 7,
+                    "origin": "waste-pile",
+                    "destination": "foundation-four",
+                    "group_elements": ""
+                },
+                "when_flipped": 21,
+                "when_moved": 21,
+                "total_selected": 1,
+                "principal_origin": "pick-pile"
+            },
+            {
+                "primary_card": {
+                    "card": 11,
+                    "origin": "pile-seven",
+                    "destination": "foundation-four",
+                    "group_elements": ""
+                },
+                "when_flipped": 123,
+                "when_moved": 124,
+                "total_selected": 1,
+                "principal_origin": "pile-seven"
+            }
+        ]
+    ]
+}
+   
+
+
