@@ -1,0 +1,1023 @@
+I wa, glPI V  TONeI Gsuddat suOBJECT ID AND DESTINATION 
+841 +
+
+note... when the card is dropped you can use the id of the drop pile to push the card  to the associated 'tracking' subarray. 
+
+But you also need to 'pop' the card (or cards) out of the destination array. so maybe have an object representing the card as below: 
+
+{
+card:
+origin:
+destination:
+array_index:
+}
+
+
+some considerations: 
+
+when multiple cards are transferred, just the first card in the selected group of cards is registered.  which means that: 
+a) all of the cards accompanying the first card need to be pushed to the array, and all of them need to have their objects updated
+
+b) all of the card objects in the origin subarray need to be popped out of the  arry; I suppose splice could be used for that ; you'll need the index of the index of the first card to use array.splice(index, -1) which will remove everything, first card object included, up to the end of the array. 
+
+c) you need a record of all the cards that are dropped, and for a way to push 'all' of them to the array associated with the destination pile. 
+
+
+Waht you could do is map through the origin array for the id of the first selected card, and if the card is not in the last position of the array, then record the firwst card and other cards into the temporary array, then you can place them all into the destination array. 
+
+1285 gives the origin pile. 
+
+879 gives desintation pile                                                                  
+
+1293 gives card id. 
+
+
+when doing a transfer of the moved multiple cards.  You'll need to get the value of all of the cards 'above' the first picked cards, and, using the number of cards transferred value in the object, the values of the other cards by mapping through the destination, finding the position of the first card, and looping through the childnodes of the destination pile, creating a new object for each childnode found from the list of children following the first card; 
+
+all you need is the id of the card because all other details on their object, origin destination are the same as that of the first card. Those objects can then be pushed (after the first card object) to the array representing the destination pile. for the initial object, only the 'primary_card' property (which is an objectd containing card value, origin and destination) needs to be pushed to the drop pile array;  The other objects created can just be a copy of that, but with their own unique card value being used instead of the first card value. 
+
+then it's just a matter of using the origin name to select the correct drop pile array, search through it for the object that has the first card's value, and using the index to splice through to the end of the array to remove the card and all of those that follow it in the array. 
+
+the 'number of cards' transferred can be used to dictate what kind of function operates; so for single card drops, the card just needs to be popped from the origin drop pile array and pushed to the destination drop pile array.  Multiple card drops will be handled as in the above paragraphs. 
+
+FROM WASTE PILE TO FOUNDATION PILE. 
+
+This also needs to be handled since, I don't think this is being registered at the moment and might be the principal cause for inaccurate information about where cards are. 
+
+once everything is handled then it would be a good idea to console log the arrays to make sure they are representing card positions correctly, and once that is confirmed, then, in the case of a solvable scenario, the solve function can use the arrays and carry out a solve since, hopefully, all cards should be showing the correct positions. 
+
+
+NO DESTINATION: 
+
+if the last element of the multiple cards array has no destination, it means that the card was selected but never dropped onto a different destination, which is not a problem because the object never gets to the place where the destination can be recorded (that's why it has no destination because that's where the destination is inserted into the object) 
+
+
+You can tell if the card just droppedx on the foundation pile is from the waste pile; basically if the card value matches the zero position value of the wasteArr array, then the card's origin is the the waste pile. 
+so, we can have the condition inside the 
+
+so, if the card comes from the waste pile there's no need to remove it from the waste array, that will be handled, but anyway, waste array and remain array are not used when in the 'solve' process so their positional accuracy isn't a factor. 
+
+If a card is selected but not moved then it won't be registered as dropped, so now it's just a question of writing the function to place dropped cards into destination array and to remove them from origin array. and it's a simple matter of checking how many cards were moved to decide which function needs to be executed. 
+
+Note, that, since wastepile cards can only be draged one by one, you only need to push the card object to the destination so there are three functions,
+
+a) functions handling cards moved from the waste pile to drop piles or foundation piles
+b) functions handling movement of one card to from
+
+
+a) push object to destination array 
+b) push object to destination array and pop origin array
+c) 
+1. get index of first selected card object in origin array
+2. push that, and following objects, up to the last object to the destination drop pile array, 
+3. splice the same elements from the origin drop pile array. 
+
+
+NOT FINISHED YET.  
+
+There's an issue with moving files from foundation piles to drop pile.. wrong card is being registered. 
+
+the reason why the wrong card is being registered is because the last element of the recrods array is being logged to the console. This happens because, accidentally, we are meeting the condition in the else part of the if/else statement.  The if condition is that the card value was in the zero position of the waste array, in other words, the card came from the waste pile, but this won't be the case for cards coming from the foundation piles, so, because there is no other condition set, those card drops fall into the else category of cards 'not' originating int he waste pile.  What needs to be done is for there to be another condition set, such that if the value of the dropped card does not correspond to the value of the last card in the records array and did not come from the waste pile, then it must have originated in the foundation pile...  NOt sure if this is bomb proof but will test it. 
+
+The above seems to be working; and you can move cards back and forth between the same two positions and the correct information will appear in the last object on the records array.  NOW WE CAN PROCEED WITH POPULATING THE ARRAYS to record the positions of all cards.  
+
+
+
+JUST A THOUGHT ABOUT A BACK BUTTON. 
+It seems plausible that the record kept in the tracking array can be used to calculate reversal of previous moves, because the order of the objects in the array is the order in which cards were moved from one place to another; and since we have both destination and origin, then the array can be used to move a card from destination back to origing, and the preceding card can move from its destination back to its origin and so forth - you should be able to go all the way back to the beginning of the game.   you could also integrate a replay this game functionality where the original state is saved and the cards are returned to that state... so much can be done.
+
+
+ISSUE - if card drop fails, the card's tracking object still gets pushed to the breadcrumb array. I noticed that the plain/text id in the data transfer is still recorded when the card is not dropped. It might be happening because the drop function is only allowed to continue if the ID property is extracted from the gragged card prior to drop. 
+
+Since the presence of the ID is independed of drop status (success or failure), it's not possible to use the id (or its absence) to decide whether to push a card object to the breadcrumb array.  So, below, I'm going to look for the parts of the code that report 'illegal' moves, because it's those moves that prevent the card drop, and when they occur, the card's object is still pushed to the breadcrumb array. So that might be a good place to pop the last element from 'breadcrumb' or perhaps a better solution would be to remove the object from the temporary array, and then have a condition that only allows the breadcrumb push 'if' the array is in a specific state.  
+
+I think that might require emptying the tempoarary array after the previous push, so that there is only ever 'one' temporary object in the array, so then, if an illegal move is made, then, prior to the drop function being executed, the temporary array is emptied, and then at the beginning of the drop() function where the temporary object is pushed to the breadcrumb array, use an if/else that will only execute breadcrumbArray.push(temporary_object), if the array is not empty.  
+
+CHANGE IN IDEA. 
+Found that the best place to push the object from temporary array to the breadcrumb array is the moment when the card being assessed successfully meets the conditions for dropping to a pile; just before the card's HTML object is sent to the cardType function for appending to the pile, that's the place I've decided to push to breadcrumb.  There's one caveat though.  Files passing the conditions may also come from the waste pile, and in that case, there was never a temporary tracking object in the temporary array.  This is explained in the code on line 396 in the JS file.  Essentially cards don't recieve tracking until they have been played, so cards not yet moved from their original positions don't need a breadcrumb position, and neither do cards in the waste pile because they are not played until they are dropped; then the tracking begins. Waste card objects are created for tracking when a dropped card is recognized as having originated in the waste pile; and then the tracking object is pushed directly to the breadcrumb array. 
+
+So, with this caveat in mind, prior to pushing a dropped card to the breadcrumb array, there's a check to see if the temporary is not empty; if it is, then there's nothing to push to the breadcrumb array, since that will be done later when the dropped card is seen to have originated in the waste pile.  This solves another issue I had recently where empty values were being pushed to the breadcrumb array. This seems to have solved the above isssue of cards getting pushed to the breadcrumb array although the drop had been rejected.  I still have to check whether altering a tracking object affects the properties of other versions of the object pushed earlier to the breadcrumb array.  Once that issue is solved, then I can rewrite the code for auto-completing the game, and then it's onto the manipulation of HTML elements with animations to render both back movements and game auto complete, and then that will be the first full iteration complete
+
+I can then think about making things more difficult by dropping 3 cards at a time and also displaying the wast cards as a cascade to aid the player in making decisions. Much more like the classic version of the game for PC. 
+
+Looking at the breadcrumb pile, it seems as though the history is in correct order.  What I might have to do is actually record a game and then follow the history to see what happens, before trying to code the movements, or perhaps it's better to have a rudimentary reverse system where you take the card in the breadcrumb, and to reverse its movement, just use remove child on the current destination and append child on the origin. In fact, I think it's just a question of doing originPile.append(destinationPile), which is how it worked in another game  - I can't remember which one now. Then you'd have to reverse rearrange the tracking arrays to represent the new configuration. 
+
+NEXT CHALLENGE - create the history
+There was an issue with using the back button; how do you know whether the card exposed by the movement of the current card was face up or face down? This was a challenge to figure out.  I thought of checking the 'draggable' attribute immediately after the card movement, but face down cards flip and the attribute is set to draggable true; so, when undoing the move, whether the card was flipped by the move or not, it's draggable attribute value will be true. 
+
+I also thought about using the fact that, if the remaining top card was incompatible with the moved card, i.e. their true values were not consecutive or the suits were not of different  colours, the moved card could not have been sitting on the faceup remaining card:
+
+ - remaining card incompatibility with the moved card indicates the flip must have happened post-move, because the incompatible remaining card is faceup. 
+
+- remaining card COMPATIBILITY with the moved card indicates two things, 
+a) that the remaining card could have been lying 'faceup' beneath the moved card or, 
+b) that the remaining card could have been lying facedown beneath the moved card, 
+
+A compatible remaining card does not guarantee that a flip happened when the card movement happened. So card compatibility/incompatibility together does cannot guarantee what the status of the remaining card was prior to the move. 
+
+SOLUTION: 
+Decided to add two new properties to the tracking object for each card: 
+when_flipped, and when_moved. 
+Then, using the length of the breadcrumb array which records when moves occured, in chronological order, when a card is moved and its tracking object is pushed to the breadcrumb array, the length of the array indicates which move that corresponds to, so the when_moved property on the object takes that value.  
+
+if the remaining card is flipped, then we seek out its tracking object and write the same number to the when_flipped property on the object.  So when the undo function is executed, it's just a matter of checking if the when_moved property on the card we intend to execute a reverse move on, matches the when_flipped number of the remaining card which the move card will sit back onto.  if the numbers match, then the remain card was flipped when the card (which is now returning) was moved so the remain card can be turned over again, and if they don't match then nothing needs to happen.  
+
+The when_flipped property is given independent of the when moved property. For example, all end cards of the drop piles have their when_flipped properties assigned a value of zero at the time of distribution, because they are flipped prior to any moves. And I've decided that the function that detects when a remain card is facedown and flips it, is the best place to assign the when_flipped property on the cards object the value that corresponds to the length of the breadcrumb array, i.e. which move in the sequence of all moves caused the card to flip. 
+
+
+
+
+
+
+If this works then I'll move on to rewriting the function for the auto-solve (SOLVED)
+after than I can deal with the actual movements of elements to correspond with the tracking object changes,
+then, after that is working, I can learn how to do automatic animations to add REALISM to undo and auto-solve features. 
+
+WORKING BACK BUTTON FUNCTIONS
+Firstly, moving single and multiple cards from pile to pile, at least drop pile to drop pile seems to be working. 
+
+ISSUES: 
+dropping foundation cards down to drop piles is not recording the drop in the breadcrumb. The card goes to the breadcrumb array, but the details are incorrect, AND, the card doesn't move from the origin tracking array to the destination tracking array. 
+
+
+UNDO process documentation - ------------------------------------------------------////
+
+SINGLE CARD DROP PILE ORIGIN: 
+- if pile is non-empty; 1087  - EMPTY ORIGIN ---------------------- 
+get origing pile
+get origin pile last card
+
+- check destination pile name of dropped card; if foundation - 1102
+get foundation pile from elements array using destinationpilename check on pile.id 
+dropCard = pile.lastchild - 1111
+find foundation tracker
+get last object of foundation tracker (this is the drop card's object)
+- check if the move caused a card flip or not
+------ code incomplete; but largely complete where destination is a drop pile
+
+
+- check destination pile name of dropped card; if droppile- 1132
+get drop pile from elements array using destinationpilename check on pile.id 1136
+ dropCard = pile.lastChild
+find destination tracker using index of above pile on dropPiletracker
+get drop card's object at end of destination tracker
+A - check whether drop card's move caused a card flip of the undercard - 1152
+if so, flip card and reassign to 'draggable:false'
+return drop card to origin pile end (using 1136 method to get pile id using originpilename)
+update returned card and previous pile end card's tracking objects
+push amended return card object back to origin tracking array
+pop the drop card object out of destination tracking array
+pop breadcrumb to erase the move from the trail
+
+
+B - card drop didn't cause a card flip
+(this means that the card was moved from elsewhere to its position prior to the current move we are trying to undo)
+
+append drop card element to origin pile
+- push breadcrumb of drop object into temp storage and pop from breadcrumb because we need to find the instance of breadcrumb that represents the last move of the drop card so the card's returned object can use all the properties on the previous breadcrumb, which it recieved when being moved from elsewhere to the origin pile 1211
+
+pop breadcrumb
+find other instances of the tracking object in breadcrumb and give a variable to the object with the highest index
+
+create a new object from the breadcrumb object
+find the destination tracker using destinationpilename and looping through drop pile trackers
+pop the drop cards object from the destination tracker
+find origin pile's tracker (using id found from origin pile element)
+push new object created from previous breadcrumb with highest index to the origin tracker
+clear temp storage
+
+
+-- ORIGIN NOT EMPTY  1293 -----------------------------------------
+-if destination was foundation
+(code yet to be written)
+
+- if destination was drop pile
+ get destnation pile by looping through all elements array, and checking which element has the id which matches destinationpilename; note the index of the pile
+dropCard = pile.lastChild (i.e. the drop card is the last card of destination pile element)
+-empty pile will have a yellow square border so remove it using cssText;
+push the drop
+- append drop card to origin pile (found earlier, prior to checking for emptiness)
+
+
+
+  /* there are two possible scenarios here
+  1. card is a king so may have moved to the origin from elsewhere
+  2. card is not a king and could not have been placed in the origin so it could not have come from elsewhere, there might have been cards placed onto it later on, but we don't need that information. 
+  NOTE: it seems to just be a matter of taking the breadcrumb object, removing the when_moved, total_selected and destination property on the object and pushing it to back to origin pile tracker or even finding the object in the destination tracker and updating its value, then make a copy out of it, push the copy to the origin tracking array, then delete it from the destination tracker */
+
+
+STORE breadcrumb in temp storage and pop() from breadcrumb array so the reference to the move of the examined card is not in the breadcrumb
+
+
+- if card is a king; 1337
+check if the card was moved before the current move selected for undo, by iterating over the breadcrumb array 
+
+if other copies of the breadcrumb object exist, select the one with the highest index, create a new object and spread the breadcrumb into the new object. 
+push the object to the origin tracker
+pop the destination tracker where the moved card's object sits
+- clear temporary breadcrumb store
+
+- if card is a not king; 1337
+check if the card was moved before the current move selected for undo, by iterating over the breadcrumb array 
+
+if other copies of the breadcrumb object exist, select the one with the highest index, create a new object and spread the breadcrumb into the new object. 
+
+push the object to the origin tracker 
+pop the destination tracker where the moved card's object sits
+- clear temporary breadcrumb store 1363
+reset when_moved, total_selected and destination to non moved detaults
+
+
+
+
+
+DETERMINING ORIGIN PILE NATURE ------
+check if originElementName contains pile, foundation, waste or pick, and decide what to do based the following origins;
+
+a) pick pile - 
+one possible destination: WASTE PILE
+- the origin array is easy; the pick array
+- card tracking object goes back to the end of the pick array so push it
+- could have a history prior to move from pick pile (i.e. from pick to waste, one or more times) so do steps 11 and 12
+- create a new object and spread breadcrumb and push to pick array
+- top pick cards are in zero position of waste array, so shift() gets rid of the card
+--- change image source on waste pile to match raw value in zero'th position of waste array
+
+
+b) waste pile - 
+three possible destinations: FOUNDATION, DROP AND PICK PILES
+- the destination is actually unimportant, because the same action will be taken irrespective of destination; Actually, just thought that the tracking object and element still need to be found so the destination end card can be returned to the foundation and so that the tracking arrays can be ammended so all steps are necessary, but perhaps an if/else or switch statement can be used to retrieve the destination pile and destination tracking array. 
+- the origin array is easy; the waste array
+- card tracking object goes back to the array's zero'th position so unshift
+- must have a history prior to the previous move so do steps 11 and 12
+- create a new object and spread storage breadcrumb (which will be a previous breadcrumb) and unshift to waste array
+--- change image source on waste pile to match raw value in zero'th position of waste array (the returned card)
+
+
+
+c) foundation pile -
+one possible destination: DROP PILE
+essentially all steps.  All foundation cards have a history since no card originates in any foundation pile, so steps 11 and 12 will be used. The check for empty piles is irrelevant here because that is done to see if there is a history on the card, as is the flip check; essentially for the same reason, all cards on foundation piles have a history so cannot ever be facedown.  
+
+
+d) drop pile -
+two possible destinations: FOUNDATION, DROP PILE
+drop piles almost finished
+Foundation piles need coding. I think it's the same as with drop piles since, the card could come from an empty drop pile and be a king or non-king, or a populated pile on a facedown or faceup card.  All the same steps apply, so perhaps it's possible to have one function or set of functions for both destinations once the foundation or drop pile tracker and elements and drop card elements tracker and card element and origin end card (that only applies to drop pile destinations since foundation cards are already faceup when exposed by a moved card) ... once the above elements arrays have been determined, they can be sent as arguments to the functions that handle steps 1 to 16 											
+
+
+
+STEPS once nature of origin pile has been determined: 
+
+CARD AND PILE ELEMENTS ---
+1. get destination element using allElementsArray.forEach(pile, pileIndex) 
+   look for pile.id that matches destinationPileName; store pileIndex for later use. 
+
+2. get the dropped card element, that's pile.lastChild
+
+3. get origin pile element. Use originElementName with allElementsArray.forEach(pile, originIndex)
+
+
+TRACKING ----
+4. get drop card tracking object and parent array. 
+Using pileIndex  from step 1, use 'destinationTracker' = dropPileTracker[pileIndex]
+
+5. get drop card object with destinationTracker[end element] 
+
+6 get origin tracking array.  
+Use originIndex from step 3, and originTracker = dropPileTracker[originIndex] 
+
+7. get end card if pile is not empty originTracker[end card]
+
+
+MOVE CARD ELEMENT ---
+prior to moving card, if origin pile is not empty check if dropCard.when_moved === endCard.when_flipped; and if true:
+a) flip origin end card using originTracker[end card].src = (use cardback image)
+b) set draggable:false
+c) proceed to step 8
+
+if not true: 
+then proceed to step 8
+
+8. append the drop card to the origin, appending to variable found in point 3
+
+
+UPDATE ORIGIN AND DESTINATION TRACKERS ------
+
+9. push breadcrumb object to temporary storage
+10. pop breadcrumb to get rid of object
+-----------------------  
+
+
+
+CHECK CARD'S HISTORY -------
+11
+a) loop through breadcrumb to find highest index of other instances of the object
+b) if one is found proceed to step 11, if not proceed to step 13.
+
+12. (card has a history)
+a) create a new empty object to store detials of highest index breadcrumb object
+b) spread breadcrumb into object
+
+
+13. (card has no history)
+a) create a new empty object
+b) spread the stored breadcrumb into the object
+c)update the following properties of the new object as indicated below:
+object.when_flipped = 0;
+object.total_selected = '';
+object.primary_card.destination = '';
+
+---------------
+
+14. push the new object to the origin pile tracker (from step 6)
+15. pop destination tracker (from step 4)
+16. clear breadcrumb temp storage
+
+
+
+IF ORIGIN PILE IS EMPTY: 
+first, move card element, as per steps 1 to 10;
+
+On an empty origin pile the drop card fits two categories: king and non-king
+KINGS: --
+For kings, there are two states:
+a) king had no history
+do step 11 and then move to step 13
+
+b) king was moved to the pile
+do step 11 and move to step 12
+
+NON-KINGS: --
+For non-kings there's only one state:
+a) no history; non-king cards cannot be placed on an empty pile, 
+do step 11 and move to step 13 - we don't need to be concerned about the when_flipped property, because that will be on the stored breadcrumb which is copied in step 13
+
+
+22 November: ISSUES TO WORK ON
+
+Waste/pick pile undo;
+-undo from waste pile to drop pile not working (at least for an immediate undo)
+the undo works if the back button is not used immediately, in other words, if a card is moved from waste pile to drop pile, then cards are moved between other piles, when the undo is then done, the waste-pile drop-pile move can be undone and the process is recording correctly. 
+
+ISSUE FOUND
+it seems as though the undone happens on the move just prior to the waste pile / drop pile move so I'll have to find out why that his happening. 
+
+FURTHER INFO
+it looks like it might only occur when no other moves have been made. 
+This might actually be another issue so come back to this. 
+
+
+APPRENTLY THIS IS ANOTHER ISSUE
+The card was not being  undone because I had the line to remove the current waste card at the top of the pile so that the undo waste card could be returned and appeneded.  But, if the waste card move to drop pile resulted in an empty wastepile, i.e. when the moved waste card was the only card in the waste pile, then there was nothing on the pile, which caused an error; fixed by using the if condition where the previous waste card is removed only if one exists.  so this problem is solved.  SAME ISSUE existed where the destination was the foundation pile.  Will need to check other areas. 
+
+console.log(wastArr)
+console.log(wasteCardTracker)
+console.log(pickCardTracker)
+console.log(dropPileTracker)
+console.log(foundationTracker)
+console.log(breadcrumbArray)
+Might have found the issue: 
+-noticed problem in the process:
+-pick card to waste pile
+-waste pile to drop pile
+-undo  - drop pile back to waste pile
+-re-do (same card as before) waste pile to drop pile
+- the initial pick card to waste pile breadcrumb is missing. 
+
+
+EXAMPLE OF ISSUE: 
+Ace of Hearts: pick pile to waste pile
+Ace of Hearts: waste pile to foundation two
+Queen of Clubs: pick pile to waste pile
+Queen of Diamonds: pick pile to waste pile 
+Queen of Diamonds: waste pile to pile six (this move exposes the queen of diamonds)
+Five of Clubs: pick pile to waste pile
+Ace of Spades: pick pile to waste pile
+Ace of Spades: waste pile to foundation three
+Two of clubs: pile four to pile three
+
+9 moves in total: 
+
+UNDO BEGINS: 
+Two of clubs: pile three back to pile four
+Ace of Spades:  foundation three to waste pile
+Ace of Spades: waste pile to pick pile (correctly placed back into pick tracker)
+Five of Clubs: waste pile to pick pile (correctly placed back into pick tracker)
+THIS SHOULD BE THE NEXT MOVE WHERE QUEEN OF DIAMONDS COVERS QUEEN OF CLUBS AGAIN
+Queen of Diamonds: pile six to waste pile (correctly placed back into waste pile) 
+Queen of Diamonds: waste pile to pick pile (correctly placed back into pick tracker)
+Queen of Clubs: waste pile to pick pile (correctly placed back into pick tracker)
+NEXT EXPECTED MOVES
+- THERE SHOULD BE NOTHING IN THE WASTE PILE HERE since the ace of hearts hasn't moved back to waste pile yet. 
+Ace of Hearts: foundation two to waste pile - FAULT:
+
+ - card disappeared (not expected)
+- Top card of pick pile is queen of clubs, which was the last card returned there. 
+ - pick pile to waste pile breadcrumb is removed (for queen of clubs)
+- card object is registered in wastecardtracker (but card not appended to waste pile)
+NORMALLY EXPECTED NEXT MOVE (IF PROCESS WAS WORKING CORRECTLY) 
+
+
+Ace of Hearts: waste pile to pick pile  
+WHAT HAPPENED:
+- card for undo recognized; details given at 1087
+- message stating card origin (came from pick pile) 1208
+- attempt to show waste pile 1218 (pile is empty)
+- highest index searched for 1249
+ - highest index value =  -1, no previous breadcrumb found, (which is odd because the wastePIle tracker had a copy of the card moving from pick pile to waste pile; which was the first move) - ACTUALLY CORRECT, since the first move of the card IS the card moving from pick pile to waste pile;  that breadcrumb was removed and a search was made in breadcrumb, but since the card has only visited the waste pile ONCE, there would be no other breadcrumb object.
+
+ - ERROR stating no card to remove 1320 (mistake in code; this is the else condition where wastePile is empty so nothing should be done)
+- card successfully moved back to pick card tracker
+
+POSSIBLE CAUSE: (circa, line 788)  the undo card was appended prior to removal of the waste pile card. But, the card was returning to an empty waste pile, followed by the condition that if the pile had more than one card, then that card should be removed.  This led to the ace being removed just after it was appended.  The condition should be BEFORE the card drop; i.e. check if the pile has a card and remove if one exists, and THEN append the undo card.  In the correct order, the condition looking for a waste pile card would have found none since there was nothing to remove, and then the ace would have been appended.  I need to check this elsewhere. If the condition was for  > 1 card then the append could happen before, because then the first child would be removed, leaving the most recent card added, which is the undo card.   - ISSUE SOLVED.  
+
+NEXT STEP -----------------------
+check all removeChild() methods to find possible issues. 
+line 1272 - found same code set up, but written correctly, i.e. if(wastePile.childNodes.length > 1){
+... then remove the first child
+}
+THIS IS ANOTHER PLACE WHERE THE CODE FOR DISPLAYING MORE THAN ONE WASTE CARD COULD BE FIGURED OUT (line 1272)
+Another good place might be around line 1305
+
+
+line 1331 this is this is in the UNDO function when the origin is waste pile, and the destination is foundation pile.  This is an IF condition that only attempts to remove a waste pile card if one exists, so that the card that went to the foundation pile can be returned to the waste pile.  The if condition exists because, in some cases, the card moving away from waste pile was the only card in the pile so it would have left the pile empty so there would be no card to remove.  If the move left a card in the waste pile, then the undo needs to have it removed.  This removeChild() is coded correctly. 
+
+line 1453 - is the UNDO almost identical to the above, but the destination is a drop pile. 
+
+line 1941 - this is a recursive function for removing multiple card elements from the destination pile when a multiple card move needs to be undone. 
+
+line 2710 - this is the point where all pick cards are distributed and all game cards are face up, alerting the player to the auto-complete option. It's used on the remain pile to remove the card back image so that the generic all cards image can replace it on the remain pile
+
+line 3857 - for removing multiple cards wrapper element from parent pile once cards are dropped to the pile element
+
+line 812 - when all cards have moved to the waste pile, the card back should disappear, but isn't doing so.  also, waste card first child removal is supposed to occur here; which might actually be the wrong logic so I'll have to work out when this function is executing -  it looks like there's a card click required after all of the cards are in waste pile; that action clears the waste pile of cards and returns them to the pick card tracker. Then the next click drops the first card into waste pile again. 
+SO; the click that occurs between the one that drops the final pick card, and the one that drops the first pick card is similar to picking up all the cards of the waste pile and returning them, facedown, to the pick pile. And I think that's actually the 'all pick pile' object in the breadcrumb array.
+
+MAYBE, rename the function to pickPileRefill() to make it clear what the function does, and, on the move where pick pile is emptied, have a special card which says refill pick pile, but only if the waste pile is not empty.  
+
+ANOTHER ISSUE FOUND: 
+This is the one I was originally looking for, where when undoing a card from foundation pile back to an empty drop pile, all the foundation cards return to the drop pile, which results in two or more aces dropping to the empty pile; which is illegal of course.  Now I need to find out why it is occuring. 
+The drop card elements are logged to the console, one after the other on line 2110; which seems to be coming from a loop of the foundation pile end cards, since, the aces are in different piles, but I'm not sure so I'll need to follow the code. 
+
+WHAT HAPPENED: 
+The selected card was ace of diamonds (2)
+- line 1071 logs confirmation of the undo function start
+- line 1075 gives details (using the last breadcrumb) of the undo card; details below:
+---------------------------------------
+card value: 2
+current location: foundation-three
+previous location: pile-one
+number of cards moved: 
+number of cards selected: 1
+when moved: 10
+when flipped: 0
+---------------------------------------
+- line 1546 log: card came from (originated in) drop pile; that's correct. 
+- line 2094 log: origin pile empty; that's correct
+- line 2097 log: foundation three; the destination pile
+- 2109/2110 log: all three ace elements logged consecutively, with raw values below:
+2, 3, 4
+- line 2127 log: the undo card object (ace of diamonds: 2) as a single array element
+- line 2128 log: breadcrumb array; ace of diamonds move is not in array; which is correct
+NOTE: on line 1075 in the logged undo card full details, the when_moved value was 10.  The 2128 breadcrumb array log shows only 9 objects, so this confirms that the ace of diamonds move was undon as expected. 
+
+BREADCRUMBS DETAILS - line 2128: 
+- move's 8 and 9 are where the ace of spades (value: 4), moved from pick pile to waste pile (move 8), and then from waste pile to foundation two (move 9)
+
+- move's 2 and 3 are where the ace of hearts (value: 3), moved from pick pile to waste pile (move 2), and then from waste pile to foundation one (move 3)
+
+This, along with the card movement details for the ace of diamonds (given on line 1075) shows that, before the undo button was pressed, the foundation pile distribution looked as below:
+Foundation-one: card 3 (ace of hearts)
+Foundation-two: card 4 (ace of spades)
+Foundation-three: card 2 (ace of diamonds)
+- RESULT IS; ace of hearts, ace of spaces and ace of diamonds, cards 3, 4, then 2, in that order, are appended to  pile one. Which is interesting because that's the order in which they  came out of the pick pile and waste pile. 
+NOTE: Only the final card, the ace of diamonds (value 2) came from pile one and only that should have been returned. 
+
+- line 2135, after logging the breadcrumb array to the console on line 2128, this line throws an error; cannot read properties of 'primary_card'
+- the issue occurs in a forEach() method, this is probably the loop that was logging each and every foundation pile; but I'll have to check that this is what 
+
+WHERE THIS FUNCTION IS: 
+- Line 1556 is the beginning of an if else condition; which itself is a condition within the if/else condition for handling the origin of the undo card, in this case the origin being a drop pile (which is where the ace of hearts originated prior to the undo). The first part of the condition is for where the card is returning to a non-empty pile, and the else condition is if the pile is empty; this is where the error is occurring. 
+-the condition for undoing to an empty pile starts on line 2084. 
+- line 2098, the condition for checking the destination of the drop card starts with 'foundation', which is where the ace originated. 
+BOOM! POSSIBLE FIND. 
+- line 2099 loops through the foundation elements to find 
+- line 2100 sets the following condition: 
+if(foundation.id = destinationPileName)
+- the above is using only the single equals symbol when it should be double. 
+- line 2014 then has the following condition:
+  if(foundation.lastChild)
+- I think, because the incorrect equals symbol was used, this is picking up EVERY foundation last child
+- line 2111, then the foundation last child is appended to the origin pile
+- this is appending all three of the children instead of the correct one.  
+- this is probably the issue: 
+
+NEXT STEPS: 
+check the other conditions to see whether this mistake has occurred elsewhere in the undo functions: but first see if this has solved the current issue.  
+Not difficult to check, just did a search for the expression '= destinationPileName', and no other occurrences show up, all others have the double equals symbol. 
+
+POSSIBLE CAUSE OF MISMATCHED CARDS IN BREADCRUMB AFTER UNDO. 
+I've decided to push a copy of each object moved back to pick card from waste pile, individually to the breadcrumb array so that there is a record of their movement. But I'll give them all the same group element number which corresponds to the number of cards in the waste pile before that made the bulk move.   This means the undo function will have to be updated. I might as well remove the undo indicator object that isn't an object for a particular card but for the whole movement.  The destination on each of the cards will be 'pick pile' and the group elements will show how many cards need to move back to the waste pile. All of the bulk move breadcrumbs can be removed and then the returned waste cards can take the values of the previous breadcrumb objects.  
+
+So, the the most recent breadcrumb can be used to do the job that the special object did, and also for deciding where the destination was prior to undo.. 
+
+
+SUNDAY WORK:
+Start on line 1407 of undo function
+-rewrite get required object info from last breadcrumb as normal, but remove the condition looking for a string, and instead, use the group_elements on the last object to decide how many cards need undoing
+- group_elements is the number of pops from breadcrumb, you can store those temporarily
+- then find old most recent instances of each object in pickCardTracker (even temp breadcrumb could be used for this), and either rewrite each pickCardTracker object using the previous related breadcrumb, or create an entirely new object using the previous breadcrumb, this would actually lessen the likelihood of mistakes, and 'send' the new object back to waste card tracker, using 'push'. 
+
+
+// CODE FOR PREVIOUS WASTE CARD NEW OBJECT AND NEW BREADCRUMB
+
+
+// reset card's group elements number to '1' 
+pickCardTracker[pickCardTracker.length -1].primary_card.group_elements = ''
+
+
+// set card's move order to breadcrumb length
+pickCardTracker[pickCardTracker.length -1].when_moved = breadcrumbArray.length + 1
+
+// set the card's when flipped order to the breadcrumb length
+pickCardTracker[pickCardTracker.length -1].when_flipped = breadcrumbArray.length + 1
+
+
+// write the destination on the card object
+pickCardTracker[pickCardTracker.length -1].primary_card.destination = 'waste-pile'
+// write the destination on the card object
+pickCardTracker[pickCardTracker.length -1].primary_card.origin = 'pick-pile'
+// push card to breadcrumb
+breadcrumbArray.push(pickCardTracker[pickCardTracker.length -1])
+
+// unshift card object to waste pile array
+wasteCardTracker.unshift(pickCardTracker[pickCardTracker.length -1])
+
+
+// this is an error at line 1004 which we need to create a condition to handle
+script 2.js:1004 Uncaught TypeError: Cannot read properties of null (reading 'parentNode')
+
+
+
+SOMETHING IS WRONG WITH THE MULTIPLE CARDS UNDO
+only one card at a time is undoing on multiple cards even though the group elements is a number and is greater than 1... check evidence images in root folder. 
+
+
+// NOTE from line 1833 in code where problem might exist: I suspect that in a multiple card drop, if the exposed origin end card is facedown, it might not be actually flipping at the same time as that the first selected card drops, and may flip after the first card drop, which means that the first card's when_moved value might not match the end card's when_flipped value.  In a real world scenario, it would be impossible for the card to flipped, before the first card is moved, so if the when_flipped value is greater than the when_moved value of the first moved card we still consider it as having flipped when the first card was moved. I'll need to check exactly what happens with a few tests, because the undo seems to be having issues with unflipping the origin end card. 
+
+
+FIXED MULTIPLE CARD MOVING AWAY FROM FACEDOWN CARD; when_moved / when_flipped values
+I changed the multiple card drop so that each dropped card gets its own when_moved value and NOT the constant value, which was the when_moved value of the first selected card. So, the groups cards get consecutive when_moved values from the primary card's when_moved value onward. The unintended consequence of this is that now, the when_flipped value of the left behind facedown card, which is the breadcrumb array length after all cards in the group are dropped, is the same as the when_moved value of the end card in the group.  So when undoing, it's just a question of checking that the when_moved value on the end card of the group matches the value of the when_flipped card that the group is being placed unto by the undo funtions; this means that the multiple card move flipped the end card and it can be unflipped when the group returns. 
+
+
+CHECKING UNDO FUNCTION: 
+- cards returned from empty pile to pile that had a face down card - working
+- cards returned from populated pile to pile that had a face down card - working
+
+
+ANOTHER POSSIBLE CAUSE OF ERRORS: misplaced breadcrumb remover function. 
+Just noticed that I've placed the function which removes the breadcrumbs to a position AFTER the function which checks for previous breadcrumbs, which seems to mean that the highest index breadcrumb object of each of the secondary cards will not be the breadcrum which references the card's movement prior to the current move we're trying to undo, but rather, they will be referencing the current move, which means that the values on the card objects returned to the tracking array will be inaccurate - I'm not sure this is absolutely the case but its a deduction which seems to hold up. If I remove the breadcrumbs first, then the search for breadcrumb objects that have the same card value as the drop cards, can only find breadcrumbs not referencing the moves we are trying to undo; and therefore must be referring to another move in each of the drop card histories. 
+
+
+FOUND MORE ISSUES: 
+I totally overlooked the append function of multiple undo cards in the where the PRIMARY card is a non-king and the group is returning to an empty pile. 
+I had the multiple cards (document fragment) append inside the condition for king PRIMARY card of a group drop back to an empty pile)
+making adjustments. 
+
+
+CODE FOR ORIGIN PILE LAST CHILD EXISTENCE BEGINS line - 1627
+1644 - destination is foundation
+1741 - destination is drop pile
+1782 - multiple card methods -- 
+1837 - if end card was facedown
+1964 - if end card was faceup
+2035 - document fragment preparation for multi card append on origin end card
+2066 - append document fragment 
+2078 - remove card elements from destination
+2095 - single card methods --
+2119 - if end card was facedown
+2130 - append drop card element back to origin pile element
+2136 - reset end card tracking object properties (maybe create a new object here)
+2161 - if end card was faceup
+2165 - append drop card element back to origin pile element
+2197 - update origin end card and drop card tracking objects
+
+
+CODE FOR ORIGIN PILE THAT WAS EMPTIED BY CARD MOVE - line 2231
+2245 - destination is foundation
+2350 - destination is drop pile
+2388 - multiple card methods -- 
+below only matters when origin pile is empty
+2461 - primary card was king
+2556 - primary card was non-king
+2577 - not king's first move
+2624 - king's first move 
+2695 - remove tracking objects from destination tracker
+2715 - document fragment preparation for multi card append on origin end card
+2743 - append document fragment 
+2078 - remove card elements from destination
+
+LINES OF CODE TO ADD: 
+- line 1636     console.log(endCardPileTracker)
+
+- line 1638 make change from:
+ console.log('left behind card') to,
+ console.log('left behind card tracking object')
+ - line 2108 console.log(valueType)
+
+
+ISSUE FOUND.  
+- pile 3contained 4 cards, two upturned
+- card 3 king of diamonds (50)
+- card 4 queen of spaces (48)
+- pile 5 contained a single card; jack of diamonds (42)
+- queen should have moved to return to pile 5
+- jack on pile five MUST have been face down, since, queen on jack is illegal
+- confirmed this by checking when_moved vs when_fliped, queen vs jack
+- when_moved = 63 = when_flipped, 
+- so the jack should have flipped when the queen was returned
+- JACK DIDN'T FLIP AND QUEEN SAT ON JACK - ILLEGAL
+--- BUT ----- there was an issue with getting the dropCard tracking object,
+- instead of retrieving card 48's tracking object, card 2's object was retrieved
+- on droCard 2, when_moved = 1
+- on card 48, when_moved = 63
+- on card 42, when_flipped = 63
+
+- card 2 was used in the as the drop card in the comparison
+endcard.when_flipped === dropCard.when_moved, i.e.
+- 2.when_moved === 42.when_flipped returns FALSE, because 1 === 63 is FALSE
+- the FALSE result means:
+-jack not flipped
+-queen returns to unflipped jack
+-queen sits on jack in drop pile: ILLEGAL - 
+- incorrect dropCard object pushed to origin pile tracker
+- this makes sense, because we've been assessing the incorrect card all along, so I need to find out why that card was picked up
+
+- WHAT TO DO: 
+- find out why the wrong drop card was selected. 
+- add line to log endCardPileTracker from above t0 line 1636, so it can be checked
+ 
+
+TEST SCENARIO: 
+Object for four of diamonds undo
+        {
+            "primary_card": {
+                "card": 14,
+                "origin": "pile-four",
+                "destination": "pile-three",
+                "group_elements": ""
+            },
+            "when_flipped": 60,
+            "when_moved": 61,
+            "total_selected": 1,
+            "principal_origin": "pile-four"
+        }
+
+- returning from pile 3 to pile 4
+- when moved 60
+
+
+- end card object of pile 4 (king of clubs)
+{
+    "primary_card": {
+        "card": 49,
+        "origin": "pile-four",
+        "destination": "",
+        "group_elements": ""
+    },
+    "total_selected": "",
+    "when_flipped": 61,
+    "when_moved": "",
+    "principal_origin": "pile-four"
+}
+
+- king was flipped when four was moved, and four only moved by itself. 
+- king should flip when four returns 
+- successful
+
+- card 14, the four was flipped on move 60, 
+- check the card on top of the four from the original array
+- find card which moved on 60
+
+- here's the initial distribution of pile 3
+[
+    49,
+    14,
+    22,
+    18
+]
+
+- so card 22 (six of diamonds) was on top of card four
+- card 22 should have a when_moved value of 60
+- BUT, card 22 actual move is 57
+- not an issue: card 22 was part of a four card group;
+- so end card of the group has when_moved value of 60 (if code works)
+-card group to move back
+[
+22
+17
+15
+9
+]
+
+so, all of these should move back, and card 14 should flip. CORRECT
+
+CHECK THAT RETURNED CARDS HAVE PREVIOUS PROPERTIES; 
+- cards 17, 15 and 9 objects are not returned to the origin tracking array. 
+- actual card object:
+20, the end card on pile 3:  POSITION 4, INDEX 3, when_moved 1
+2, first card on foundation 4: POSITION 1, INDEX 0, when_moved 2
+18, end card on pile 5: POSITION 5, INDEX 4, when_moved 4
+- all cards are WRONG!
+
+PROGRESSION OF CARD MOVEMENTS
+- 1090 move group's end card details
+- 1617 origin pile type: drop pile
+- 1627 condition check for empty or populated origin pile
+- 1631 origin end card element, CORRECT
+- 1341 left behind end card tracking object, CORRECT
+- 1367 origin pile tracker (with incorrect undo secondary card objects)
+- 1765 drop pile tracker has correct end card, post undo, 
+this card was apparently flipped on move 3
+- two of diamonds (6) was moved on 3, so should be on top of the pile (correct)
+- 1771 last drop card in the group is CORRECT, card 9, three of clubs
+- 1783 condition checking group elements object property; number = group drag
+- 1778 group elements kind; number, CORRECT
+- 1784 number of cards in group, CORRECT
+- 1794 check to see if pile element index and drop pile index are the same, CORRECT
+- 1798 primary card object, CORRECT
+- 1802 confirmation of undo type: multiple card undo - DROP PILE, CORRECT
+- 1804 confirm number of cards to undo
+- 1805 primary card, CORRECT
+- 1807 origin pile, CORRECT
+- 1810 origin pile end card, CORRECT
+- 1813 origin end pile tracking object, CORRECT
+- 1816 primary card tracking object, CORRECT
+- 1822 origin pile length, CORRECT
+- 1826 primary card index (group start index), CORRECT
+- 1832 group primary card element, CORRECT
+- 1839 confirming origin card was facedown, CORRECT
+- 1841 end card element, CORRECT
+- 1887 temporary array for secondary group card objects, CORRECT
+INTERESTING NOTE: 
+The first secondary card, 17, lies in position 5 of the breadcrumb; this is the only instance of the object: in other words, card 17's previous move was move 5. 
+There are four breadcrumb tracking objects that have earlier movements than card 17; these have raw values of 18, 6, 2 and 20. Their moves occurred at 4, 3, 2 and 1 respectively.
+Tracking objects for three of the four cards, 18, 2 and 20 were the ones returned to the origin pile tracker along with the initial correct tracking object with card value of 22.
+
+IDEAS: 
+For some reason, the card objects moved to the breadcrumb array before the first secondary card are being picked up as matching the secondary card.  The first secondary card itself isn't moved either.  I suspect there might be a fault with the equality symbol I'm using.  
+
+HOW TO TACKLE: 
+would be an idea to log the objects that are found in the breadcrumb array, that are supposed to be previous version of the secondary card tracking objects, which are meant to be pushed back to the origin tracker. 
+
+Also, check the equality symbol is correct. 
+
+FOUND IT: 
+I forgot to change the highest index variable to the index of the 'found' previous breadcrumb.  I was instead just incrementing the highest index by 1, and then at the end of the loop, the highest index was used. 
+
+A LOOK AT WHAT HAPPENED WITH EACH CARD: 
+- card 17, total instances found, 2
+previous instances found 1
+Highest index incrimented once:
+highest index = 0
+condition: highest index > -1
+so push breadcrumb[highest index] to origin tracker:
+pushed object: breadcrumb[0]
+pushed object raw value: 20
+
+- card 15, total instances 3
+previous instances found 2
+highest index = -1 + 2, (1)
+condition: highest index > -1
+so push breadcrumb[highest index] to origin tracker:
+pushed object: breadcrumb[1]
+pushed object raw value: 2
+
+- card 15, total instances 5
+previous instances found 4
+highest index = -1 + 4, (3)
+condition: highest index > -1
+so push breadcrumb[highest index] to origin tracker:
+pushed object: breadcrumb[3]
+pushed object raw value: 18
+
+TRACKING OBJECTS PUSHED TO ORIGIN TRACKER BY UNDO: 
+
+[
+22
+20
+2
+18
+]
+
+FULL ORIGIN TRACKER, POST UNDO
+
+[
+	49
+	14
+	22
+-------------------
+	20
+	2
+	18
+]
+
+
+the last 3 tracking objects were incorrect because of the above issue. 
+
+WHAT NEXT?
+Check for all other instances where highest index is used to locate previous tracking objects. 
+In the correct code,  when, in the first condition, a previous breadcrumb object is found, a second condition checks if the index value of the object is greater than highest index, and if true, then highest index is updated with the index of the matching breadcrumb. 
+
+in the mistaken code, the second condition doesn't exist. The highest index is incrimented by 1 when a matching breadcrumb object is found, or in the else part of the first condition the highest index maintains its value. 
+
+
+INITIAL INSTANCE:
+- 1915
+UNDO TYPE:
+drop pile origin, origin pile populated, drop pile destination, multiple cards drop 1783, origin end card unflip 1838, secondary card undo objects 1908>
+
+OTHER INSTANCES OF THE ERROR FOUND:
+- 2508 
+UNDO TYPE:
+drop pile origin, origin pile empty, drop pile destination, multiple cards drop 2391, primary card non-king 2464, secondary card undo objects 2501>
+- 2591
+UNDO TYPE:
+drop pile origin, origin pile empty, drop pile destination, multiple cards drop 2391, primary card IS king 2561, secondary card undo objects 2582>
+
+this should resolve the undos. seems to work.  On the odd occasion nothing happens on undo click, not even console log, so that might be mouse battery. 
+
+
+FOUNDATION PILES COSMETIC CHANGES
+Also, realized that foundation piles only show top card in game so that'll be one of the next features to work on. I don't see why you can't just make all cards position absolute, then restrict the foundation pile size, and, just to be sure, increase the z-index of the top card by 1 or 2 greater than the previous card using pile.length. 
+
+do this as first job tomorrow then!
+
+CHANGE HOW FACE UP CARDS ARE ASSESS. 
+Instead of using the tracking objects for the first card on populated piles to see if there is a number value on the when_flipped property; try using the all elements array to see if the first element of each populated pile has the draggable attribute as true, which means the card is face up. Maybe this would work better. 
+
+Maybe you could set up a variable for the number of populated piles, and have another variable for the number of first card elements that are face up; each time you meet a populated pile, increment the first variable by 1, and each time the first card on a pile is draggable: true, increment the second variable by 1. If at the end of the loop the two variables have the same value, then for all non-empty piles, the first card is face up, which means that all of the piles cards are face up, which means all cards in drop piles are face up; and once that state is true it cannot be undone. So if all pick cards are spent and the drop piles comply with that state, then all of the games cards are faceup and a solution should be possible. 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+10 december work!
+work on empty origin pile undo, destination is drop pile and foundation pile, card is king or non king. 
+
+Figure out how to append multiple cards. 
+
+DEBUGGING ISSUES: 
+Foundation pile undo back to waste pile: 
+translation working correctly, butt then the drop card changes to full card size and I'm not sure that it is appending to the waste pile (will have to check); it's appending 'somewhere' though. 
+
+YES; it IS appending to the waste pile, but the size needs to be corrected. 
+FIXED: I didn't realize that on the class for waste cards there was the 'cardEl' class in addition to the 'wasteCardEl' class.  Added 'cardEl' class and now issue is fixed, cards returning to the waste pile from foundation pile translate and append. Not sure what would happen if I moved the waste card again; need to check both directions, undo back to pick pile and move away to a pile. 
+
+UNDO TO PICK PILE TEST: 
+this is working correctly. 
+
+MOVE CARD AWAY AGAIN TEST:
+This is not working correctlyil, I tried moving the card back to the foundation pile, but the card maintains its cardEl class so it has a negative margin-top value making its top edge sit outside the top of the foundation pile; AND, although there was a set of cards below the moved waste card, no card comes to the top of the waste pile when the card is moved away again. 
+
+NOTE: no error is logged in the console for the above error. 
+TRACKING: tracking is correct for the destination; the card's object is in the foundation tracker. 
+
+UNDO THE ABOVE ISSUE: 
+Undoing the above issue using the undo button seems to correct things.  The top card on the waste pile appears again. 
+
+So the issue is with what happens with the card when as it is moved away from the waste pile. 
+
+CLASS ISSUE: 
+Actually, cards on the waste pile DO NOT have the 'cardEl' class, just the wasteCardEl class. I wonder if there's a typo? 
+
+UNDO ACCIDENTAL FIX; 
+After returning the card to the pick pile; the issue is fixed, likely because all of the card  is treated as an entirely new card. 
+
+ISSUE FOUND: 
+The class is NOT wasteCardEl, but cardElWaste... the fix should work then. 
+
+ISSUE FIXED: 
+There is one small issue with the undo transition; between the transition and the append, there is a bit of an upward jump.  I suspect this might be caused because I'm using boundingRect() values that are not the best for the translate from origin back to waste pile.  But I'll check the translations from ALL foundations to see if the effect is the same. 
+
+TRANSITION / APPEND JUMP
+The same jump occurs from ALL foundation piles. 
+the y-translation uses the difference of waste card bottom and drop card bottom.  But I was thinking that the issue could be to do with the fact that while the card is on the foundation pile it has the 'foundationCardEl' class style, but on the waste card it takes the cardElWaste class style, which I think has similar margin properties to the cardEl class, i.e. the cards on the waste pile have a negative top margin.  This might be causing the jump 
+
+-yes, the cardElWaste class has the same margin-top (-7vw) as the cardEl class. On my screen this value is approximately -92 pixels in height; so maybe I'll need to see if I can find this property on the card object (don't know if it is in getBoundingRect()) and use the pixel value in the initial calculation, perhaps adding it to the destination 'bottom' property... Just as guess; it needs to be calculated correctly so I'll log the values for both card and origin to see where the discrepancy is. 
+
+CHECK DROP PILE UNDO TO WASTE-PILE: 
+Before attempting to fix the above issue on translating the card from foundation back to waste pile; I want to also check drop pile returns to the waste pile to see if this issue appears because there could be factors other than the margin-top discrepancy. 
+
+ISSUE FOUND: 
+repeat of the card successfully transitioning back to waste pile, but then the card displays at its true size - checking the card's HTML element revealed that it had the incorrect class name 'wasteCardEl', so I'll change that to cardElWaste; this should resolve the issue. 
+
+ISSUE SOLVED: 
+Yes, the issue was with the wrong className; changed the class name and the card remains the correct size. 
+
+TRANSITION ISSUE: 
+the same transition jump at time of append that occurs on the foundation cards returning to the waste pile is occurring on the drop pile card returning to the waste pile. This seems to rule out the possibility that the zero margin top on the foundation card returning to the waste pile is causing an issue.  
+
+ANOTHER POSSIBILITY: 
+The translation from drop pile to drop pile or foundation pile, and from foundation pile to drop pile uses the 'bottom' of the origin pile in the y-transition calculation, because the card returns to the bottom of the pile which is subject to change, dictated by the number of cards on the pile.  But for returning cards to the waste pile, that isn't really needed.  I also wonder if the waste pile cards sit in such a way that there's a padding distance at the bottom of the waste pile.  That might explain why, if I'm using the bottom y value as a reference, when the card gets there, it needs to jump up a little to append.  Further tests needed. 
+
+CONSOLE CHECK OF WASTE PILE PADDING: 
+There is a 1vw padding at the bottom of the waste pile which on my current screen represents 13px.  I'll subtract this value from the destination y-translate and see if this makes a difference in the animation jumpt - 
+
+yes, it made a significant difference, but, I'm going to use the top y-value instead of the bottom and see if this elimitates the jump; just a hunch about this one, given that using the bottom values isn't necessary because there is never more than one card on the waste pile
+
+ISSUE FIXED: 
+also added the modification for the distance created by padding bottom and that has fixed the issue. I think I'll definitely need to get relative values on the origin piles, because since I'm using relative values for the element sizes, those will be dictated by the type of screen the game is played on.  The window resize event should help with this since the pile elements with have their values automatically changed if the player changes screen size or orientation  without refreshing the page. 
+
+FOUNDATION TO WASTE PILE UNDO ISSUES FIXED: 
+using the same principles which fixed drop pile returns to waste pile the issues of foundation piles returning to waste pile is now corrected - ALL FOUNDATION PILES tested. 
+
+
+
+ 
+A LOOK AT MULTIPLE CARD APPENDS
+Sorted.. 
+it wasn't as complicated as the drag and drop method for multiple cards, where you need to create a range based on the initially clicked card, wrap that card and all elements on the same pile from that card onward to the end of the pile, give drag start and drag end events on the wrapper, and then create an id for it, and after dropping the wrapper, unwrap and remove the wrapper. 
+
+For the undo, given that the cards elements have been pushed to the reaElements array, they can be appended to the wrapper when created and inserted before the elements present in the destination array. The wrapper can then be translated to the origin pile, appended,  and unwrapped and removed.  All working for non-empty pile undo of multiple cards. 
+
+now just to repeat the same for empty origin piles.  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+GoI 

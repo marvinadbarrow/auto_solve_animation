@@ -11,7 +11,7 @@
     position: relative;
     }
     
-    #solve-btn{display: block;}
+    #solve-btn{display: none;}
     .cardEl{
     width: 10vw;
     margin-top: -12vw;
@@ -53,7 +53,10 @@
         }
         
         
-    
+        .duration-undo{
+            transition-duration: 0.5s;
+        }
+
     
     
     #undo-btn{
@@ -71,10 +74,14 @@
     
 
 
-    #solve-btn, #shuffle-btn{background-color: rgb(41, 40, 40); font-weight: bold; width: 20%; height: auto; font-size: 25px; color:white; border-radius: 8px; margin: auto;}
+    #solve-btn, #shuffle-btn,  #refresh-btn{background-color: rgb(41, 40, 40); font-weight: bold; width: 20%; height: auto; font-size: 25px; color:white; border-radius: 8px; margin: auto;}
     
     
-    
+    #solve-btn{background-color: rgb(41, 40, 40); }
+
+#refresh-btn{background-color: rgb(233, 77, 30); display: none; }
+
+
     .highlight{
      outline: 3px solid red;
      outline-offset: 3px;
@@ -156,7 +163,7 @@
         border-radius: 8px;
         height: 12vw;
         margin-top: 0vw;
-        padding: 30px;
+        padding: 20px;
        width: 9vw;
         margin:1vw;
         border-width: 1px;
@@ -183,7 +190,7 @@
     
     /* styling for card piles*/
     .piles{
-        height: fit-content;
+        min-height: 15vw;
         width: 10vw;
             border-top: 1px;
         opacity: 1;
@@ -315,14 +322,16 @@
             background-color: rgb(10, 151, 41);
         }
 
-        #refresh-btn{
-            background-color: rgb(10, 111, 151);
-            display: none;
-        }
+  
 
 
     @media(orientation:landscape){
 
+        .cardElWaste{
+            width: 5.5vw;
+            margin-top: -7vw;
+        }
+    
         .stack-one, .stack-two{
             width: 100%;
             height: fit-content;
@@ -396,8 +405,8 @@
             .foundation-pile{
                 height: fit-content;
                 margin-top:0;
-                padding: 1vw 1vw 2vw 1vw;
-               width: 7vw;
+                padding:20px;
+               width: 6vw;
              margin: 1vw;
                   }
     
