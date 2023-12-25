@@ -1,4 +1,8 @@
-
+// variables for solvable distribution json files
+shuffleOneUrl = '/solvable_distribution.json'
+shuffleTwoUrl = '/solvable_distribution_2.json'
+shuffleThreeUrl = '/solvable_distribution_3.json'
+shuffleFourUrl = '/solvable_distribution_4.json'
 
 let cardPack = [ 
   "1.png","2.png","3.png","4.png",
@@ -46,23 +50,37 @@ let exDistributionPick = [];
 
 // AUTOMATIC SHUFFLING ON PAGE LOAD -------------------------
 window.onload = function() {
+// default setting for empty foundation piles
+foundationPileMainArray.forEach(foundation =>{
+  foundation.setAttribute('class', 'empty-foundation')
+})
+
+
+  // choose either random shuffle, or solvable example
   shuffleCards();
+  // shuffleSolvable()
 };
 
 
 
   // AUTOMATIC SOLVABLE DISTRIBUTION FUNCTION STARTS ---------------- 
-//   fetch('/solvable_distribution.json')
-// .then(res => res.json())
-// .then(data =>{
-//   console.log('fetched solvable distribution data')
-//   console.log(data)
-//  exDistributionDrop.push(...data.drop_pile_distribution)
-// exDistributionPick.push(...data.pick_pile_distribution)
 
-// distributeSolvable(exDistributionDrop, exDistributionPick)
 
-// })
+  const shuffleSolvable = () =>{
+// fetch solvable shuffle
+    fetch(shuffleFourUrl)
+    .then(res => res.json())
+    .then(data =>{
+      console.log('fetched solvable distribution data')
+      console.log(data)
+     exDistributionDrop.push(...data.drop_pile_distribution)
+    exDistributionPick.push(...data.pick_pile_distribution)
+    
+    distributeSolvable(exDistributionDrop, exDistributionPick)
+    
+    })
+  }
+
 
 
 // Send distribution arrays for rendering
@@ -71,7 +89,7 @@ const distributeSolvable = (dropPiles, pickPile) =>{
   console.log(dropPiles)
   console.log(pickPile)
     // send solvable distribution for card distribution
-    // showCardPiles(dropPiles[6], dropPiles[5], dropPiles[4], dropPiles[3], dropPiles[2], dropPiles[1], dropPiles[0], pickPile)
+    showCardPiles(dropPiles[6], dropPiles[5], dropPiles[4], dropPiles[3], dropPiles[2], dropPiles[1], dropPiles[0], pickPile)
   }
 
 
@@ -116,21 +134,54 @@ let winCalc;
 
 var mouseDownArr = []
 var mouseDown = 0;
-document.body.onmousedown = function() { 
-  mouseDown = 1;
-  mouseDownArr.unshift(mouseDown)
-  // console.log(
-    
-  // )
-}
+
+
+// when mouse is released, there will be a check in the clicked pile to see if a wrapper exists on the pile.  If the card was moved to another pile, then the wrapper would not be on the clicked pile, but if the card was clicked and not dragged, the wrapper, which serves no purpose, will not have been unwrapped, so the pile details need to be sent to the reset undropped function which will unwrap the card and prevent problems recognizing the card if it is still surrounded by a wrapper. 
 document.body.onmouseup = function() {
-  mouseDown = 0;
-  mouseDownArr.unshift(mouseDown)
-  // console.log(mouseDownArr)
+  let totalWrappers = 0;
+  let existingWrapper
+ 
+console.log('clicked pile information')
+console.log(selectArray)
+// check array holding details for originally clicked pile.
+// if pile has children
+if(selectArray.length > 0){
+  if(selectArray[0].childNodes.length > 0){
+    // loop through children
+    selectArray[0].childNodes.forEach(child =>{
+      // if child's class attribute contains the string 'wrapper'
+   if(child.getAttribute('class').includes('wrapper')){
+    // log child to the console
+    console.log('wrapper element')
+    existingWrapper = child
+    // increment wrapper value
+    totalWrappers ++
+  
+   }
+    })
+  }
+
+}
+
+
+// after loop has finished the wrapper value should be 1
+console.log('wrapper value')
+console.log(existingWrapper)
+if(totalWrappers > 0){
+  // if the pile contains a wrapper, then unwrap it. 
+  // don't know if this will cause a conflict if the reset undropped is already running: if it has to wait then there will be no wrapper on the pile and therefore totalWrappers will be zero and this condition will not execute the function. The reset undropped fu nction is executed from another place.  That is when multiple cards are no longer dragging and are dropped. Which is a different scenario than the below one which doesn't need the card to be dragged first before executing. so a single click on the card will cause this function to execute because the mousedown executes the wrapper function on the clicked card and adds a wrapper around the card/s in the parent pile.  
+  resetUndropped(selectArray[0], existingWrapper, existingWrapper.firstCard, )
+
+  console.log('unmoved card needs unwrapping')
+}
 }
 
 
 
+
+  // December 22nd changes: - now using mouse up on document body to check if a clicked card has been moved. By accident, I noticed that if a card was clicked twice in rapid succession, then the card retained its red border; further investigation showed that the card was still in its wrapper.  This came about because I noticed that if the red boundary was present, then the undo function would not work. On checking the breadcrumb array, I noticed that the 'destination' on the tracking object of the clicked card was not a 'pile' destination, but a stringified number, which is why the undo wouldn't work, since undo requires a pile id to work.  Further checks showed that the card was still in its wrapper, which was still on the clicked pile. And the undo function was taking the wrapper details as the 'card to undo', and this is why the undo does not work; the wrapper does not have card details such as card_value, or origin/destination etc. So clicking a card but not dragging it causes the card to remain in its wrapper. And this might be why, later on in the game, when the card is moved to another location, especially a foundation pile, it doesn't sit correctly, because it is not an actual card with the expected class attributes. This is a hypothesis and not proven yet.    The above function checks the origin pile on mouseup and removes the wrapper if one exists; whether there is a double or single click, for each click, if the wrapper is present it is removed.  This might solve the other issues where cards don't sit properly.  Further investigation is needed though. 
+
+  // December 22nd changes: - the above finding may even go a long way to explaining why the undo stopped working, given that the information on a wrapper is not adequate for an undo to be carried out on the clicked card.  It might even explain why on the rare occasion, the auto solve function did not work, because, if a card is wrapped, then the object in the tracking array is the wrapper, rather than the card within it, and this should cause the recursion used to move card tracking objects from drop pile trackers to foundation trackers to fail, since the wrapper doesn't have the details needed to make a comparison with a foundation end card's object, to see if a valid card drop can be made; the wrapper id value, which is the same as the parsed card id value, may be useful, but then, the destination pile information on the wrapper is invalid so no pile is identified, and the wrapper object (and the card inside it) will not be moved to the correct pile tracker.  This is why the infinite loop would occur because the recursion never finds the pile and continues to loop after no other valid card drops can be found for any foundation pile. Had there been no wrapper, then the card's tracking object would have moved, exposing the next tracking object, and the process could continue, but wrapper would be blocking the process.  This might have solved all issues, but experimentation still needs to happen. So far so good. 
 
 // seven pile elements
 var pileOne = document.getElementById('pile-one');
@@ -188,14 +239,7 @@ let allFoundationElements = [foundationPileOne, foundationPileTwo, foundationPil
 
 
 
-allFoundationElements.forEach(foundation =>{
-foundation.style.backgroundImage ='images/foundation_background_white.png'
-  })
 
-  foundationPileOne.style.backgroundImage = ' url(images/foundation_background_white.png)'
-  foundationPileTwo.style.backgroundImage = ' url(images/foundation_background_white.png)'
-  foundationPileThree.style.backgroundImage = ' url(images/foundation_background_white.png)'
-  foundationPileFour.style.backgroundImage = ' url(images/foundation_background_white.png)'
 // the elements in this array are node lists, each one listing the contents (cards elements) of one of the foundation piles.  In the event that all pick cards are used and all of the drop pile cards are revealed, each nodelist will be looped through where, for each card element, the id will be extracted, the file extension removed from the id string, and the remaining string converted to a number, the resulting numbers will be pushed to a subarray representing the foundation pile corresponding to the node list. The resulting subarrays along with subarrays representing the drop piles, will be used used to create a method for automating the completion of the game from the above described scenario.  then the player will be given the option to allow the game to auto complete. 
 let foundationPileMainArray = [foundationPileOne, foundationPileTwo, foundationPileThree, foundationPileFour]
   
@@ -570,6 +614,13 @@ const pushPiles = () =>{
 
       testCard.addEventListener('dragend', dragEnd)
 
+        // adding an event listener to first selected card to alert when selection is released. 
+testCard.onmouseup  = (e) =>{
+  console.log(e)
+  console.log('mouse released from selected card')
+}
+
+
       // give top cards class of .face-up and all other cards class of .face-down
     if (i<array.length -1){}else{
        testCard.setAttribute('draggable', true) // make img draggable
@@ -625,86 +676,6 @@ trackingArray[trackingArray.length - 1].when_flipped = breadcrumbArray.length
 
 }
 
-
-
-// WASTE CARD DROPPED SORT WASTE
-const   updateWaste = (tracking) =>{
-console.log('this is the waste card that is moved away')
-console.log(tracking)
-
-
-// wasteCardTracker.shift()
-// I think wastecard tracker is updated elsewhere so this is just for the element manipulation (hopefully)
-console.log('waste card tracker')
-console.log(wasteCardTracker)
-  // you probably had this correct and all you needed to do was add the event listeners but now we have an issue with the cards in the wastepile doubling up so we'll, just remove the image and replace it.  
-
-  
-  // remove previous waste card if it exists
-if(wastePile.childNodes.length > 0){
-
-  // this must be the old card just moved away
-  console.log('card left in pile')
-  console.log(wastePile)
-
-  // have to wonder if you need to remove anything, because, appending the card elsewhere should automatically remove it from the origin
-  // wastePile.removeChild(wastePile.firstChild)
-
-  wastArr.shift()
-
-}
-
-
-
-// now we can use it to display the corresponding card in the wastepile; which has no element since the image was removed from it
-console.log('waste card tracker, position 1 should have next waste card top')
-console.log(wasteCardTracker)
-console.log(wasteCardTracker[1])
-// get card value to use as ID
-let newId = wasteCardTracker[1].primary_card.card;
-// CREATE NEW IMAGE FOR WASTE PILE TOP CARD
-let image = document.createElement('img')
-// ADD REQUIRED ATTRIBUTES CLASSES
-image.classList.add('cardElWaste')
-image.classList.add('card-border')
-image.setAttribute('draggable', true)
-
-// set source name for image using ID
-let sourceName = newId + '.png'
-// assign image as source
-image.src = `images/${sourceName}`
-// set id using image name.extension
-image.setAttribute('id', sourceName)
-// append image to wastepile
-wastePile.appendChild(image) 
-// add drag event listeners to card 
-image.addEventListener('dragstart', dragStart)
-image.addEventListener('dragend', dragEnd)
-
-let source = wastePile.firstChild.getAttribute('src')
-console.log(source)
-
-}
-
-
-// this card removes the current waste pile top card value and sends the new zero position value to the sort where its value is used to get the image of the new top card.  
-const preUpdateWaste = (cardObject) =>{
-  console.log('checking id')
-  console.log(parseInt(cardObject.id))
-  let newTopCardObject = wasteCardTracker[0]
-
-  console.log('top object of waste tracker before tracking update')
-  console.log(newTopCardObject)
-  if(wasteCardTracker.length > 1){
-    updateWaste(newTopCardObject)  
-  }
-  // updateWaste(newTopCardObject)
-}
-
-
-  
-
-
     // if on moving a card away from a pile, the top card left behind is facing down, flip it to face up
     const faceUp = () =>{
 
@@ -736,7 +707,48 @@ const refreshRemain = () =>{
 
 
 
+const cascadeWastePile = (cardTotal, testCard) =>{
+console.log('cardTotal')
+console.log(cardTotal)
 
+
+
+      // if this function is executed from the drop function then the incoming test card will not be draggable because it is the previous top card - so perhaps this is the best place to make the top card of the waste pile draggable. 
+
+      testCard.setAttribute('draggable', true)
+
+
+// prevent a crash if cardTotal argument is null or undefined
+if(cardTotal){
+  switch(cardTotal){
+    case 2: // just two cards in the waste pile so only cascade top card
+      testCard.classList.add('cascade-right-single')
+      // just in case the first  card has any cascade class on it, reset it's class attribute
+      wastePile.firstChild.setAttribute('class', 'cardElWaste card-border')
+      break;
+      default: // three or more cards are in the waste pile
+      // give the top card double cascade distance
+      testCard.setAttribute('class', 'cardElWaste card-border cascade-right-double')
+
+
+// give second from top 
+      testCard.previousElementSibling.setAttribute('class', 'cardElWaste card-border cascade-right-single')
+      testCard.previousElementSibling.previousElementSibling.setAttribute('class', 'cardElWaste card-border')
+   }
+}else{
+  wastePile.firstChild.setAttribute('draggable', true)
+}
+
+
+// testCard.classList.add('cascade-right-more')
+// testCard.previousElementSibling.classList.add('cascade-right')
+// testCard.previousElementSibling.previousElementSibling.classList.remove('cascade-right')
+// testCard.previousElementSibling.classList.remove('cascade-right-more')
+
+
+// testCard.classList.add('cascade-right')
+// testCard.previousElementSibling.classList.remove('cascade-right')
+}
 
 // PICK PILE FLIP THROUGH
 const remainFlip = () =>{
@@ -763,14 +775,6 @@ let testCard = document.createElement('img')
 // we'll use last index for our id 
 let index = remainingCardsArr.length - 1 
 let pickIndex = pickCardTracker.length - 1
-console.log('pick index')
-console.log(pickIndex)
-console.log('remain card array index')
-console.log(index)
-console.log('pick tracker')
-console.log(pickCardTracker)
-console.log('tracking object')
-console.log(pickCardTracker[pickIndex])
 // the last card in the array gets displayed in the remain-waste
 let value = pickCardTracker[pickIndex].primary_card.card // last index, LIV, value pulled
 let id = cardPack[value - 1] // id is cardpack[LIV]
@@ -822,21 +826,39 @@ console.log('pickCardTracker')
 console.log(pickCardTracker)
 console.log('wasteCardTracker')
 console.log(wasteCardTracker)
-// then we need to append it to the waste pile
-// remove card image if one exists
-if(wastePile.childNodes.length > 0){
-wastePile.removeChild(wastePile.firstChild)
-}
+
 // append created card
 wastePile.appendChild(testCard)
 cardFlip.play()
 // add dragstart and dragend event listeners
-testCard.addEventListener('dragstart', dragStart)
+testCard.addEventListener('dragstart', (e) =>{
+  dragStart(e)
+})
 testCard.addEventListener('dragend', dragEnd)
+
+// check move is registered in breadcrumb array
 console.log('breadcrumbArray')
 console.log(breadcrumbArray)
 
-// once any card has been moved from drop piles or pick piles the undo button will appear - when the game is solved breadcrumbs will be cleared so button will disapper. 
+// if one exists, the previous top card should have its draggable attribute set to 'false'.  Since the top three cards cascade, and only the top card can be used, the other visible cards should be not draggable.  
+if(testCard.previousElementSibling){
+  testCard.previousElementSibling.setAttribute('draggable', false)
+}
+
+
+// the top two cards should shift to show a three-card cascade only if there are more than two cards on the waste pile.  
+if(wastePile.childNodes.length > 2){
+cascadeWastePile(3, testCard)
+
+  
+}else if(
+  // The top card only should shift,  to show a two-card cascade if there are only two cards on the waste pile
+  wastePile.childNodes.length > 1){
+  cascadeWastePile(2, testCard)
+
+}
+
+// if one card is moved anywhere, including from pick pile to waste pile, show the undo button
 if(breadcrumbArray.length > 0){
   // show button if breadcrumbs exist
   undoBtn.style.display = "block"
@@ -865,9 +887,9 @@ if(wasteCardTracker.length > 0){
 
 
 
-// there should be no cards in the pile by now. 
-if(wastePile.firstChild){
-  wastePile.firstChild.src  = 'images/no more cards img.png';
+// removve all cards from the waste pile
+while(wastePile.firstChild){
+wastePile.removeChild(wastePile.firstChild)
   // console.log(wastePile)
   
 }
@@ -958,43 +980,73 @@ if(pickCardTracker.length > 0){
 remainPile.addEventListener('click', cardChoice)
 
 
-
+const dragStatus = []
 
 // for when multiple cards are dragged
 const dragstartMulti = (event) =>{
-// console.log('hello')
+console.log('dragging started')
 event.target.style.width = '8.5vw'
 event.dataTransfer.setData("text/plain", event.target.id)
 setTimeout(() => {
+  // i think this below class is used to 'hide' the card from its original location while it is being dragged. When cards are dragged from the waste pile, you can still see the card sat on the waste pile, while the card being dragged has some transparency on it. 
   event.target.classList.add('hide')
-
+dragStatus.unshift(0)
 }, 1);
 }
 
 // for when multiple cards are dropped
 const dragendMulti = (event) =>{
-  
-  // console.log('dragging ended')
-  
-  }
-  
+  dragStatus.unshift(1)
+  console.log(event)
+  console.log(selectArray)
+  console.log('dragging ended')
 
+  let cardWrapper;
+  let cardElement;
+
+ // only ONE element of selectArray will be an object; which is the origin pile - check for that element
+  selectArray.forEach(element =>{
+    if(typeof element == 'object'){
+      // loop through child elements (cards)
+   element.childNodes.forEach(child =>{
+    // if child's class attribute contains 'wrapper'
+if(child.getAttribute('class').includes('wrapper')){
+  // child is wrapper so assign to cardWrapper variable
+ cardWrapper = child
+ // the selected element will be the first child in the wrapper
+ cardElement = child.childNodes[0]
+ // send wrapper for unwrap
+ resetUndropped(element, cardWrapper, cardElement)
+ // NOTE: if the card has already dropped, then the wrapper will have disappeared from the pile children so will not be found and therefore teh resetUndropped cards function should not execute0
+}
+   })
+    }
+
+  })
+// if(classNames.includes('multi-style')){
+//   resetUndropped(selectArray[0], dragIdArray)
+// }
+  
+  }                                 
+  
 
 
 // BEGIN DRAG
 const dragStart = (event) =>{
+
   //let card = event.target;
-  event.target.classList.add('dragging')
- event.dataTransfer.setData("text/plain", event.target.id);
+console.log('dragging')
+    event.target.classList.add('dragging')
+   event.dataTransfer.setData("text/plain", event.target.id);
 // the class added causes the dragged card to be highighted with a red solid 4px border
 
 }
 
 // STOP DRAG
 const dragEnd = (event) =>{
+console.log('end of drag')
   event.target.classList.remove('dragging')
 
- 
 }
 
 
@@ -1022,62 +1074,6 @@ const dragLeave = (event) =>{
 
 
 
-
-// similar to MULTI RESET - this runs if multiple cards are clicked but not dragged, or if dragged multiple cards fail drop requirements and are returned to original pile  
-const autoResetGo = (pile,object,wrapper, command) =>{
-
-
-// then we can establish the pile type from its class
-let getPileType = pile.getAttribute('class');
-// console.log(getPileType)
-// console.log(command)
-// console.log(pile)
-
-
-// command will have a value of less than three only if a wrapper was found on the pile, otherwise command will have an integer value of at least 5, because all the id lengths accumulate to give the total lengths of all card id's added together. 
-if(command < 3 && pile.childNodes.length > 0){
-// that means that there's a child in the clicked pile that has an id length of '2' digits or less so it must be a wrapper element so we can remove it (also the 'pile.childNodes.length > 0' ensures that if the exited pile contains no childnodes, then the For Loop for setting children attributes to 'draggable, true' does not run: previously, before adding the childnodes.length condition there was an error being thrown back)
-  let wrapperElement = document.getElementById(wrapper.id)
-  var parent = wrapperElement.parentNode
-  // console.log(object)
-   if(wrapper.length > 1){
-
-  }
-
-
-  let children = wrapper.childNodes
-  // ERROR HERE possibly - we should be checking wrapper childnodes length.. SORTED - we had the delete wrapper elements inside the loop. So the children were being removed from the wrapper before they could have the draggable attribute reset because they were no longer inside the wrapper.  So; moved the unwrap functioun outside of the loop and placed it AFTER the loop. So, once the loop is complete and all children attributes are reset, we then unwrap the wrapper and delete it.... PROBLEM SOLVED. 
-
-           // loop through children to add draggable:true; attribute
-  for(i = 0; i < object.length ; i++){
-  
-    // set each card to draggable true
-    children[i].setAttribute('draggable', 'true')
-    // remove the red outline on each card
-    children[i].classList.remove('multi-style')
-  }
-
-
-
-      // for unwrapping the multiple dragged cards
-
-// essentially, if wrapper has a first child, then, insert it before wrapper element, so eventually this will happen until there are no more children
-while (wrapperElement.firstChild) parent.insertBefore(wrapperElement.firstChild, wrapperElement);
-
-// remove wrapper from pile once no more first children exist
-parent.removeChild(wrapperElement);
-// ok, this actually works so now 
-
-
-
-
-  // console.log(pile)
-  // to check their draggability
-}else{
-// all id's have a character length longer than 3 so all of them must be image elements and not a wrapper so we will do nothing just log that there's no wrapper
-
-// console.log('no wrapper')
-}}
 
 
 
@@ -1109,7 +1105,27 @@ let allPilesArray = [pileOneChildren, pileTwoChildren, pileThreeChildren, pileFo
 
 let autoSolvePossible = 0; // when the deck cards are finished, increment this value to '1' so that you can stop the 'cards finished' alert from re-executing each time you move a card in the drop pile after the initial alert.  you might also be able to manipulate the allPilesArray from within that condition. So, rather than repopulating the array from scratch, you can pick push the moved card values to destination piles and pop moved cards from origin piles. 
 
-// console.log(pileOneArr, pileTwoArr, pileThreeArr, pileFourArr,    pileFiveArr, pileSixArr, pileSevenArr)
+
+// POPULATED FOUNDATION STYLING
+function foundationPileStyle(pile){
+  console.log('setting populated pile style')
+  pile.setAttribute('class', 'foundation-pile')
+}
+
+// EMPTY FOUNDATION STYLING
+function emptyFoundation(pile){
+  console.log('setting empty pile style')
+  pile.setAttribute('class', 'empty-foundation')
+}
+// REMOVE GUIDE BORDER ONCE A PILE IS POPULATED
+function pileOutlineRemove(pile){
+pile.setAttribute('class', 'piles')
+}
+
+// PUT GUIDE BORDER ON EMPTY PILES
+function emptyPileOutline(pile){
+  pile.setAttribute('class', 'empty-piles')
+  }
 
 
 undoBtn.addEventListener('click', ()=>{
@@ -1189,14 +1205,11 @@ MovedCardObject = movedCardTracker[movedCardTracker.length - 1]
 console.log(MovedCardObject)
 
 // GET POSITIONS OF ORIGIN PILE AND CARD TO CALCULATE TRANSFORM:TRANSLATE
-// pile positions
-let originClientPositions = originPileElement.getBoundingClientRect()
-let originPositionObj = {
-  'x':originClientPositions.x,
-  'y':originClientPositions.y,
-  'right':originClientPositions.right,
-  'bottom':originClientPositions.bottom
-}
+
+let yDistance;
+
+let xDistance;
+
 
 // drop card positions
 let dropCardClientPositions = dropCard.getBoundingClientRect()
@@ -1207,10 +1220,47 @@ let dropCardPositionsObj = {
   'bottom':dropCardClientPositions.bottom
 }
 
-// the y translaction can be calculated using the bottom of the foundation pile and the bottom of the card.  
-let yDistance = originPositionObj.bottom - dropCardPositionsObj.bottom
+// if the origin pile is populated then use the lastchild details for calculating the target. 
 
-let xDistance = originPositionObj.x - dropCardPositionsObj.x + 17
+if(originPileElement.childNodes.length > 0){
+  let originCardClientPositions = originPileElement.lastChild.getBoundingClientRect()
+let lastChildPositionObj = {
+  'x':originCardClientPositions.x,
+  'y':originCardClientPositions.y,
+  'right':originCardClientPositions.right,
+  'bottom':originCardClientPositions.bottom
+}
+
+// the y translaction can be calculated using the bottom of the foundation pile and the bottom of the card.  
+yDistance = lastChildPositionObj.bottom - dropCardPositionsObj.bottom
+
+xDistance = lastChildPositionObj.x - dropCardPositionsObj.x + 17
+
+}else{
+
+// there's no card in the pile so they pile coordinates will be used as a guide for the drop card undo target. 
+
+// pile positions
+let originClientPositions = originPileElement.getBoundingClientRect()
+let originPositionObj = {
+  'x':originClientPositions.x,
+  'y':originClientPositions.y,
+  'right':originClientPositions.right,
+  'bottom':originClientPositions.bottom
+}
+
+
+// the y translaction can be calculated using the bottom of the foundation pile and the bottom of the card.  
+yDistance = originPositionObj.bottom - dropCardPositionsObj.bottom
+
+xDistance = originPositionObj.x - dropCardPositionsObj.x + 17
+
+}
+
+
+
+
+
 
     // card returning to foundation pile from drop pile, so card displays non-cascaded, which is how cards display on the foundation piles, set class attribute as below
     dropCard.setAttribute('class', 'cardEl card-transition duration-undo')
@@ -1221,12 +1271,14 @@ let xDistance = originPositionObj.x - dropCardPositionsObj.x + 17
       dropCard.setAttribute('class', 'foundationCardEl')
 // remove the translation
       dropCard.style.transform = `translate(${0}px, ${0}px)`
-      dropCard.removeAttribute('transform')
+
       // RETURN / APPEND DROP CARD (to foundation pile)
   originPileElement.append(dropCard)
     }, 550);
 
-
+setTimeout(() => {
+  originPileElement.lastChild.style.transform = ``
+}, 650);
 
 //TEMPORARY BREADCRUMB STORE
 let storeBreadcrumb = []
@@ -1353,44 +1405,29 @@ storeBreadcrumb = []
 
 // CREATE TOP NEW CARD IMAGE
 // only do this if there is more than one card on the waste pile; i.e. more than one object in the wasteCardTracker array. 
-if(wasteCardTracker.length > 0){
+if(wastePile.childNodes.length > 0){
 
- // create new image for wastepile card
-let newCardElement = document.createElement('img')
-// GET CARD RAW VALUE from card which moved down to zero position on wastecard tracker - but this can only work if the array has cards in it 
-  console.log('waste pile updated top card')
-  console.log(wasteCardTracker[0])
-  console.log('waste card tracker full array')
-  console.log(wasteCardTracker)
+// since waste cards populate on the piles, the undo will reveal the card that was the previous top card. So it's just a matter of removing of deleting the end card. You might even be able to remove last child.  There's no need to create a new image. 
+wastePile.removeChild(wastePile.lastChild)
+
+
+  // conditions to decide if the waste pile needs cascading - this needs to happen after drop card that is a waste pile top card has dropped, because the cascadeWastePile function needs the 'previous' top card of the waste card pile as its second argument, otherwise the drop card (not yet dropped) would be the argument, and would receive the wrong cascade information. 
+
+// the top two cards should shift to show a three-card cascade only if there are more than two cards on the waste pile.  
+if(wastePile.childNodes.length > 2){
+  cascadeWastePile(3, wastePile.lastChild)
   
-  let value = wasteCardTracker[0].primary_card.card 
-  // CREATE CARD ID USING CARD VALUE
-  let id = value + '.png' 
-  // SET ID ATTRIBUTE ON CARD ELEMENT USING ABOVE ID
-  newCardElement.setAttribute('id', id)
-  // GIVE WASTE CLASSNAME
-   newCardElement.classList.add('cardElWaste')
-   // ADD BORDER
-   newCardElement.classList.add('card-border')
-   // MAKE DRAGGABLE
-  newCardElement.setAttribute('draggable', true)
-  // GET CARD IMAGE
-  newCardElement.src = `images/${id}` // define source
-  // ATTACH DRAGE EVENTS TO CARD ELEMENT
-  newCardElement.addEventListener('dragstart', dragStart)
-  newCardElement.addEventListener('dragend', dragEnd)
-  wastePile.classList.add('card-size');
-
-// STYLING NOTICE: cards returning to the pick pile from waste pile in the undo function have no physical element to them, so there is no card to format since pick cards are not displayed. 
-
-  // APPEND NEW CARD TO WASTEPILE
-  wastePile.append(newCardElement)
-
-
-  // AT THIS POINT, THERE SHOULD BE 2 CARDS ON THE WASTE PILE SO REMOVE THE FIRST CARD ELEMENT. 
-  if(wastePile.childNodes.length > 1){
-    wastePile.removeChild(wastePile.firstChild)
+    
+  }else if(
+    // The top card only should shift,  to show a two-card cascade if there are only two cards on the waste pile
+    wastePile.childNodes.length > 1){
+    cascadeWastePile(2, wastePile.lastChild)
+  
+  }else if(wastePile.childNodes.length > 0){
+    // only one card is on the pile so set its draggable attribute to 'true'
+    wastePile.firstChild.setAttribute('draggable', true)
   }
+
   console.log(wastePile)
 }else{ // ONLY ONE CARD TO REMOVE
   // So no card to create
@@ -1471,6 +1508,8 @@ if(testValue === pickCardTracker.length){
             // ORIGIN PILE  (WASTE PILE)
             originPileElement = wastePile
 
+
+
     // ORIGIN PILE TRACKER
 endCardPileTracker = wasteCardTracker
 // DESTINATION TYPE: FOUNDATION 
@@ -1497,16 +1536,6 @@ if(destinationPileName.includes('foundation')){
     console.log(MovedCardObject)
     
 
-
-     
-
-    
-                // REMOVE CURRENT CARD FROM WASTE PILE - IF ONE EXISTS.  There might not be one because the returned card may have been the only one in the waste pile before it was moved to the foundation pile; it's movement would have left waste pile empty. So it's return would be to an empty waste pile so there would be no card to remove from waste pile. 
-                if(originPileElement.childNodes.length > 0){
-                  originPileElement.removeChild(originPileElement.firstChild)
-                  
-                }   
-                
                 
         
   // CODE FOR TRANSITION PRIOR TO APPENDING CARD ----------------
@@ -1516,12 +1545,15 @@ if(destinationPileName.includes('foundation')){
 // pile positions
 let originClientPositions = originPileElement.getBoundingClientRect()
 let originPositionObj = {
+  'top':originClientPositions.top,
   'x':originClientPositions.x,
   'y':originClientPositions.y,
   'right':originClientPositions.right,
   'bottom':originClientPositions.bottom
 }
 
+console.log('waste pile client positions')
+console.log(originClientPositions)
 // drop card positions
 let dropCardClientPositions = dropCard.getBoundingClientRect()
 let dropCardPositionsObj = {
@@ -1531,10 +1563,23 @@ let dropCardPositionsObj = {
   'bottom':dropCardClientPositions.bottom
 }
 
-// the y translaction can be calculated using the bottom of the foundation pile and the bottom of the card.  
-let yDistance = originPositionObj.y - dropCardPositionsObj.y - 13
+// use a left margin dependent on the number of cards on the pile, x for two cards and 2x for three cards, because the cascade results in the target being to the left of the position that the card needs to land on. use the variable wasteCardShift
+let wasteCardShift;
 
-let xDistance = originPositionObj.x - dropCardPositionsObj.x + 13
+if(wastePile.childNodes.length > 1){
+wasteCardShift = window.innerWidth*0.07
+}else if(wastePile.childNodes.length > 0){
+  wasteCardShift = window.innerWidth*0.04
+}else{
+wasteCardShift = 0
+}
+
+console.log('window width')
+console.log(window.innerWidth)
+// the y translaction can be calculated using the bottom of the foundation pile and the bottom of the card.  
+let yDistance = originPositionObj.top - dropCardPositionsObj.y 
+
+let xDistance = originPositionObj.x - dropCardPositionsObj.x + wasteCardShift
 
 
 
@@ -1544,6 +1589,11 @@ console.log('DETAILS FOR SMOOTHER FOUNDATION TO WASTE PILE UNDO')
     dropCard.setAttribute('class', 'foundationCardEl card-transition duration-undo')
     dropCard.style.transform = `translate(${xDistance}px, ${yDistance}px)`
 
+// IS THE ORIGIN PILE EMPTYIED BY UNDO? NOTE: only ACE undo's from the foundation piles will cause it to be empty so if the raw value of the card is below 5 execute the empty foundation funcion
+if(parseInt(dropCard.id) < 5){
+  emptyFoundation(foundation)
+}
+
 
     // SET TIMEOUT FOR APPEND SO THAT THE CARD APPENDS 'AFTER' IT MOVES TO THE APPROXIMATE UNDO POSITION
     setTimeout(() => {
@@ -1552,12 +1602,30 @@ console.log('DETAILS FOR SMOOTHER FOUNDATION TO WASTE PILE UNDO')
       dropCard.setAttribute('class', 'cardElWaste card-border')
 // remove the translation
       dropCard.style.transform = `translate(${0}px, ${0}px)`
-      dropCard.removeAttribute('transform')
+   
       // RETURN / APPEND DROP CARD (to foundation pile)
   originPileElement.append(dropCard)
+
+
+    // conditions to decide if the waste pile needs cascading - this needs to happen after drop card that is a waste pile top card has dropped, because the cascadeWastePile function needs the 'previous' top card of the waste card pile as its second argument, otherwise the drop card (not yet dropped) would be the argument, and would receive the wrong cascade information. 
+
+// the top two cards should shift to show a three-card cascade only if there are more than two cards on the waste pile.  
+if(wastePile.childNodes.length > 2){
+  cascadeWastePile(3, wastePile.lastChild)
+  
+    
+  }else if(
+    // The top card only should shift,  to show a two-card cascade if there are only two cards on the waste pile
+    wastePile.childNodes.length > 1){
+    cascadeWastePile(2, wastePile.lastChild)
+  
+  }
     }, 550);
 
 
+    setTimeout(() => {
+      originPileElement.lastChild.style.transform = ``
+    }, 600);
   // CODE FOR TRANSITION ------------------------------------
                 
                 
@@ -1611,7 +1679,7 @@ console.log('DETAILS FOR SMOOTHER FOUNDATION TO WASTE PILE UNDO')
 } // DESTINATION TYPE: PICK PILE
 else if(destinationPileName.includes('pick')){
 
-  // when destination is pick pile, this means all cards on waste pile were simultaneously moved back to pick pile. The number of cards transferred is in the group elements property of all cards. JUST REALIZED THIS IS NOT STRICTLY TRUE: when a single card is being undone on the waste pile, it also has a destination of pick pile
+  // when destination is pick pile, this means all cards on waste pile were simultaneously moved back (actually forward) to the pick pile. The number of cards transferred is in the group elements property of all cards. JUST REALIZED THIS IS NOT STRICTLY TRUE: when a single card is being undone on the waste pile, it also has a destination of pick pile
 
   console.log('all waste pile contents objects breadcrumb')
   console.log(lastBreadcrumb)
@@ -1685,21 +1753,46 @@ pickCardTracker = []
 
 // for the multiple card remove change the source of the pick pile image to card back again
 remainPile.firstChild.src = `images/backgnd.jpg` 
-// the waste tracker array's zero position object's 'primary_card.card' value can be used to get the corresponding card image for display.  AN IMAGE NEEDS TO BE CREATED WHEN THERE IS NO CHILD IN THE WASTE ARRAY
 
-let newWasteCard = document.createElement('img')
-// SET SOURCE AS 'NO MORE CARDS' IMAGE
-newWasteCard.src = `images/${wasteCardTracker[0].primary_card.card}.png`;
-// ADD CLASSES FOR STYLINGS
-newWasteCard.classList.add('cardElWaste')
-newWasteCard.classList.add('card-border')
-// APPEND IMAGE
-wastePile.append(newWasteCard)
+// now ALL of the waste pile needs to be repopulated with all cards that were on the pile prior to the state which the undo is reversing. Loop through the waste card tracker and for each object creat a card; the card needs to be prepended to the pile since, so that the last object in the array, represents the bottom card in the pile, and the first object in the array, represents the card at the top of the pile, i.e. the pile's end card. 
 
-if(wastePile.childNodes.length > 1){
-  // if there is more than one card on the waste pile after this drop then remove the first child
+// remove the 'no more cards' image from the waste pile
+if(wastePile.firstChild){
   wastePile.removeChild(wastePile.firstChild)
 }
+
+
+wasteCardTracker.forEach(object =>{
+
+  let newWasteCard = document.createElement('img')
+  // set image source using object's card value
+  newWasteCard.src = `images/${object.primary_card.card}.png`;
+// ADD CLASSES FOR STYLINGS
+newWasteCard.setAttribute('class','cardElWaste card-border')
+
+// PREPEND IMAGE
+wastePile.prepend(newWasteCard)
+})
+
+// after waste pile is repopulated, execute appropriate cascade if the waste pile has more than one card on it
+
+
+  // conditions to decide if the waste pile needs cascading - 
+
+// the top two cards should shift to show a three-card cascade only if there are more than two cards on the waste pile.  
+if(wastePile.childNodes.length > 2){
+  cascadeWastePile(3, wastePile.lastChild)
+      
+  }else if(
+    // The top card only should shift,  to show a two-card cascade if there are only two cards on the waste pile
+    wastePile.childNodes.length > 1){
+    cascadeWastePile(2, wastePile.lastChild)
+  
+  }else if(wastePile.childNodes.length > 0){
+    // only one card is on the pile so set its draggable attribute to 'true'
+    wastePile.firstChild.setAttribute('draggable', true)
+  }
+
     
 }// DESTINATION TYPE: DROP PILE
 else{ 
@@ -1738,6 +1831,7 @@ else{
 // pile positions
 let originClientPositions = originPileElement.getBoundingClientRect()
 let originPositionObj = {
+  'top':originClientPositions.top,
   'x':originClientPositions.x,
   'y':originClientPositions.y,
   'right':originClientPositions.right,
@@ -1753,10 +1847,25 @@ let dropCardPositionsObj = {
   'bottom':dropCardClientPositions.bottom
 }
 
-// the y translaction can be calculated using the bottom of the foundation pile and the bottom of the card.  
-let yDistance = originPositionObj.y - dropCardPositionsObj.y  - 13
 
-let xDistance = originPositionObj.x - dropCardPositionsObj.x + 12
+let wasteCardShift;
+
+if(wastePile.childNodes.length > 1){
+wasteCardShift = window.innerWidth*0.07
+}else if(wastePile.childNodes.length > 0){
+  wasteCardShift = window.innerWidth*0.04
+}else{
+wasteCardShift = 0
+}
+
+console.log('window width')
+console.log(window.innerWidth)
+
+
+// the y translaction can be calculated using the bottom of the foundation pile and the bottom of the card.  
+let yDistance = originPositionObj.top - dropCardPositionsObj.y  
+
+let xDistance = originPositionObj.x - dropCardPositionsObj.x + wasteCardShift
 
     // card returning to foundation pile from drop pile, so card displays non-cascaded, which is how cards display on the foundation piles, set class attribute as below
     dropCard.setAttribute('class', 'cardEl card-transition duration-undo')
@@ -1770,16 +1879,29 @@ let xDistance = originPositionObj.x - dropCardPositionsObj.x + 12
       dropCard.setAttribute('class', 'cardElWaste card-border')
 // remove the translation
       dropCard.style.transform = `translate(${0}px, ${0}px)`
-      dropCard.removeAttribute('transform')
+   
       // RETURN / APPEND DROP CARD (to foundation pile)
   originPileElement.append(dropCard)
-  // just in case there's an old card left in place, check and remove the previoys one. 
-  if(wastePile.childNodes.length > 1){
-    wastePile.removeChild(wastePile.firstChild)
+
+
+    // conditions to decide if the waste pile needs cascading - this needs to happen after drop card that is a waste pile top card has dropped, because the cascadeWastePile function needs the 'previous' top card of the waste card pile as its second argument, otherwise the drop card (not yet dropped) would be the argument, and would receive the wrong cascade information. 
+
+// the top two cards should shift to show a three-card cascade only if there are more than two cards on the waste pile.  
+if(wastePile.childNodes.length > 2){
+  cascadeWastePile(3, wastePile.lastChild)
+  
+    
+  }else if(
+    // The top card only should shift,  to show a two-card cascade if there are only two cards on the waste pile
+    wastePile.childNodes.length > 1){
+    cascadeWastePile(2, wastePile.lastChild)
+  
   }
     }, 550);
 
-  
+    setTimeout(() => {
+      originPileElement.lastChild.style.transform = ``
+    }, 600);
  // CODE FOR TRANSITION ------------------------------------
          
          
@@ -1849,7 +1971,7 @@ allPileElements.forEach((pile, pileIndex) =>{
         // ORIGIN INDEX
     originIndex = pileIndex
 
-    // IF ORIGIN PILE IS POPULATED
+    // IF ORIGIN PILE IS POPULATED -------------------------------
     if(originPileElement.lastChild){
 
         // ORIGIN PILE END CARD
@@ -1906,6 +2028,28 @@ cardFlip.play()
 
 
         // GET POSITIONS OF ORIGIN PILE AND CARD TO CALCULATE TRANSFORM:TRANSLATE
+
+        // drop card positions
+let dropCardClientPositions = dropCard.getBoundingClientRect()
+let dropCardPositionsObj = {
+  'x':dropCardClientPositions.x,
+  'y':dropCardClientPositions.y, 
+  'right':dropCardClientPositions.right,
+  'bottom':dropCardClientPositions.bottom
+}
+
+
+// since the pile is populated, use the lastchild position as the general target. 
+// end card positions
+let endCardPositions = originLastCardElement.getBoundingClientRect()
+
+let endCardPositionObj = {
+  'top':endCardPositions.top,
+  'x':endCardPositions.x,
+  'y':endCardPositions.y,
+  'right':endCardPositions.right,
+  'bottom':endCardPositions.bottom
+}
 // pile positions
 let originClientPositions = originPileElement.getBoundingClientRect()
 let originPositionObj = {
@@ -1915,37 +2059,39 @@ let originPositionObj = {
   'bottom':originClientPositions.bottom
 }
 
-// drop card positions
-let dropCardClientPositions = dropCard.getBoundingClientRect()
-let dropCardPositionsObj = {
-  'x':dropCardClientPositions.x,
-  'y':dropCardClientPositions.y, 
-  'right':dropCardClientPositions.right,
-  'bottom':dropCardClientPositions.bottom
-}
+
 
 // the y translaction can be calculated using the bottom of the foundation pile and the bottom of the card.  
-let yDistance = originPositionObj.bottom - dropCardPositionsObj.bottom 
+let yDistance = endCardPositionObj.top - dropCardPositionsObj.y + 30
 
-let xDistance = originPositionObj.x - dropCardPositionsObj.x + 17
+let xDistance = originPositionObj.x - dropCardPositionsObj.x 
 
     // card returning to foundation pile from drop pile, so card displays non-cascaded, which is how cards display on the foundation piles, set class attribute as below
     dropCard.setAttribute('class', 'foundationCardEl card-transition duration-undo')
     dropCard.style.transform = `translate(${xDistance}px, ${yDistance}px)`
 
+// IS THE ORIGIN PILE EMPTYIED BY UNDO? NOTE: only ACE undo's from the foundation piles will cause it to be empty so if the raw value of the card is below 5 execute the empty foundation funcion
+if(parseInt(dropCard.id) < 5){
+  emptyFoundation(foundation)
+}
 
     // SET TIMEOUT FOR APPEND SO THAT THE CARD APPENDS 'AFTER' IT MOVES TO THE APPROXIMATE UNDO POSITION
     setTimeout(() => {
       
+
+
       // don't set non-cascade until just before card appends which will hopefully drop the card ontop of the others because all of them have the foundationCardEl style class
       dropCard.setAttribute('class', 'cardEl card-border')
 // remove the translation
       dropCard.style.transform = `translate(${0}px, ${0}px)`
-      dropCard.removeAttribute('transform')
+    
       // RETURN / APPEND DROP CARD (to foundation pile)
   originPileElement.append(dropCard)
     }, 550);
 
+    setTimeout(() => {
+      originPileElement.lastChild.style.transform = ``
+    }, 600);
   
  // CODE FOR TRANSITION ------------------------------------
          
@@ -2017,12 +2163,14 @@ let xDistance = originPositionObj.x - dropCardPositionsObj.x + 17
       dropCard.setAttribute('class', 'cardEl card-border')
 // remove the translation
       dropCard.style.transform = `translate(${0}px, ${0}px)`
-      dropCard.removeAttribute('transform')
+
       // RETURN / APPEND DROP CARD (to foundation pile)
   originPileElement.append(dropCard)
     }, 550);
 
-  
+    setTimeout(() => {
+      originPileElement.lastChild.style.transform = ``
+    }, 650);
  // CODE FOR TRANSITION ------------------------------------
          
 
@@ -2162,9 +2310,10 @@ console.log('group elements object type')
 
     
 
-
+// this might need re coding because the numbers may not match...
 // ORIGIN END CARD ORIENTATION CHECK: CARD FLIPPED BY MOVE
 if(endCardObject.when_flipped === MovedCardObject.when_moved){
+  // this could be a king, or any other card. 
   console.log('ORIGIN end card was facedown before drop card moved; UNflip card')
   
   console.log( originPileElement.lastChild)
@@ -2174,7 +2323,9 @@ if(endCardObject.when_flipped === MovedCardObject.when_moved){
   // play flip sound
 cardFlip.play()
 
-
+if(groupMoveFirstCardObject.primary_card.card > 48){
+  emptyPileOutline(destinationPileElement)
+}
     // ORIGIN END CARD OBJECT PROPERTY RESETS
     endCardObject.when_flipped = ''
 
@@ -2295,6 +2446,8 @@ function removeCardObjects(cardsToRemove){
 
 }else{ // ORIGIN END CARD WAS NOT FLIPPED BY GROUP CARD MOVE - MULTIPLE card UNDO onto faceup card. 
 
+  // this could not have been a king because a king cannot sit on a flipped card. 
+
 // same process as above but this time the primary card is included in the breadcrumb search since it must have a history (WHERE IT MOVED TO THE END CARD, WHICH IS FACE UP) and therefore a previous breadcrumb. 
 
   //TRACKING OBJECTS REPOSITION
@@ -2361,7 +2514,7 @@ function removeBreadcrumbs(howMany){
 
 }
 
-// NOTE: THE APPENDING OF CARDS WILL HAVE TO BE DONE IN A DIFFERENT WAY.  A div needs to be created, inserted into the pile before the first card, then all cards from the selected onward need to be appended to the wrapper. Then the the position values of the wrapper need to be worked out (as well as the origin position values), after which, the translation values can be calculated, the translation can be executed, the wrapper appended to the origin pile, and then each card in the wrapper can be inserted 'before' the wrapper and finally the wrapper can be deleted from the pile.
+// NOTE: THE APPENDING OF CARDS WILL HAVE TO BE DONE IN A DIFFERENT WAY.  A div needs to be created, inserted into the pile before the first card, then all cards from the selected onward need to be appended to the wrapper. Then the the position value+s of the wrapper need to be worked out (as well as the origin position values), after which, the translation values can be calculated, the translation can be executed, the wrapper appended to the origin pile, and then each card in the wrapper can be inserted 'before' the wrapper and finally the wrapper can be deleted from the pile.
 
 
 
@@ -2373,8 +2526,7 @@ function removeBreadcrumbs(howMany){
 
 
 
-      // CREATE DOCUMENT FRAGMENT TO APPEND MULTIPLE CARDS 
-      let df = new DocumentFragment()
+
        // to hold cards to be removed from destination pile
       let realElements = []
       //LOOP THROUGH DESTINATION PILE 
@@ -2420,29 +2572,50 @@ realElements.forEach(child =>{
 console.log('checking wrapper element has appended and elements are appended to it')
 console.log(wrapperParent)
 // elements successfully appended to the wrapper...  NOW IT'S A MATTER OF GETTING ORIGIN POSITION DETAILS AND WRAPPER POSITION DETAILS. 
+
+
 let wrapperPositions = newWrapper.getBoundingClientRect()
 let wrapperPositionObj = {
+  'top': wrapperPositions.top,
   'x': wrapperPositions.x,
   'y': wrapperPositions.y
 }
+
+
+// WRAPPER IS RETURNING TO A POPULATED PILE, SO INSTEAD OF USING THE PILE TOP AS THE GARGET, IT'S BEST TO USE THE END CARD TOP AS THE TARGET
+let endCardPositions = originLastCardElement.getBoundingClientRect()
+let endCardPositionObj = {
+  'top': endCardPositions.top,
+  'x': endCardPositions.x,
+  'y': endCardPositions.y,
+  'bottom': endCardPositions.bottom,
+}
+
+console.log('endCardPositionObj')
+console.log(endCardPositionObj)
+
 
 
 // get origin pile positions
 let originPositions = originPileElement.getBoundingClientRect()
 // create an object for the positions
 let originPositionObj = {
+  'top': originPositions.top,
   'x': originPositions.x,
   'bottom': originPositions.bottom
 }
 
-let xDistance = originPositionObj.x - wrapperPositionObj.x +17
-let yDistance = originPositionObj.bottom - wrapperPositionObj.y
+console.log('originPositionObj')
+console.log(originPositionObj)
 
-console.log('wrapper positions')
-console.log(wrapperPositionObj)
+// this variable gives 15% of the view width, which approximates the negative margin top of the drop pile cards, which seems to be needed in order to correctly position the wrapper to target. 
+let checkWindowHeight = window.innerWidth*0.15
 
-console.log('distances: x, y')
-console.log(xDistance, yDistance)
+let xDistance = endCardPositionObj.x - wrapperPositionObj.x
+let yDistance = endCardPositionObj.y - wrapperPositionObj.y + 120
+
+
+
 
 // ADD TRANSITIONS AND TRANSLATE TO WRAPPER
 newWrapper.setAttribute('class', 'card-transition duration-undo')
@@ -2455,6 +2628,7 @@ setTimeout(() => {
 
   // reset translation
 newWrapper.style.transform =  `translate(${0}px, ${0}px)`
+
   originPileElement.append(newWrapper)
 
   // REMOVE WRAPPER - while new wrapper has a first child
@@ -2469,8 +2643,11 @@ newWrapper.style.transform =  `translate(${0}px, ${0}px)`
     originPileElement.removeChild(newWrapper);
     }
 
-
 }, 510);
+
+setTimeout(() => {
+  originPileElement.lastChild.style.transform = ``
+}, 600);
 // END OF TRANSFORM/TRANSLATE FOR MULTIPLE CARDS TO NON-EMPTY PILE: ----------------------------------------------------------------------------------------------------------------------------------
 
 
@@ -2487,20 +2664,6 @@ realElements = []
 
 // -- ALL TRACKING COMPLETE REPOSITIONING; REMOVE CARD ELEMENTS
 
-// REMOVE UNDO CARDS FROM DESTNATION PILE
-// function removeCardElements(howMany){
-  // destinationPileElement.removeChild(destinationPileElement.lastChild)
-  // howMany --
-  // if(howMany > 0){
-  //   removeCardElements(howMany)
-  // }else{
-  //   console.log('all cards removed')
-  // }
-  
-  
-  // }
-  // removeCardElements(groupElementsValue)
-  
 
 
 
@@ -2531,6 +2694,7 @@ console.log('group elements object type')
 
 // ORIGIN END CARD ORIENTATION CHECK
 if(endCardObject.when_flipped === MovedCardObject.when_moved){
+  // this could have been ANY card, including a king
   console.log('ORIGIN end card was facedown before drop card moved; UNflip card')
   
   // RESET FACEDOWN ATTRIBUTES
@@ -2538,34 +2702,48 @@ if(endCardObject.when_flipped === MovedCardObject.when_moved){
   originLastCardElement.setAttribute('draggable', false)
   cardFlip.play()
  
+  if(MovedCardObject.primary_card.card > 48){
+    // moved single card was a king so undo will result in an empty destination pile - execute pile border
+    emptyPileOutline(destinationPileElement)
+  }
 
   // CODE FOR TRANSITION ------------------------------------
 
 
 
         // GET POSITIONS OF ORIGIN PILE AND CARD TO CALCULATE TRANSFORM:TRANSLATE
-// pile positions
-let originClientPositions = originPileElement.getBoundingClientRect()
-let originPositionObj = {
-  'x':originClientPositions.x,
-  'y':originClientPositions.y,
-  'right':originClientPositions.right,
-  'bottom':originClientPositions.bottom
-}
 
-// drop card positions
+        // drop card positions
 let dropCardClientPositions = dropCard.getBoundingClientRect()
 let dropCardPositionsObj = {
+  'top':dropCardClientPositions.top,
   'x':dropCardClientPositions.x,
   'y':dropCardClientPositions.y, 
   'right':dropCardClientPositions.right,
   'bottom':dropCardClientPositions.bottom
 }
 
-// the y translaction can be calculated using the bottom of the foundation pile and the bottom of the card.  
-let yDistance = originPositionObj.bottom - dropCardPositionsObj.bottom
 
-let xDistance = originPositionObj.x - dropCardPositionsObj.x + 17
+let originCardClientPositions = originPileElement.lastChild.getBoundingClientRect()
+
+lastChildPositionObj = {
+  'top':originCardClientPositions.top,
+  'x':originCardClientPositions.x,
+  'y':originCardClientPositions.y,
+  'right':originCardClientPositions.right,
+  'bottom':originCardClientPositions.bottom
+}
+
+// get the exact distance in pixels, created by a 12vw margin top on the undo card as it moves back to the origin end card 
+let wasteCardDrop;
+
+wasteCardDrop = window.innerWidth*0.04
+
+
+// the y translaction can be calculated using the bottom of the foundation pile and the bottom of the card.  
+let yDistance = lastChildPositionObj.top - dropCardPositionsObj.top + wasteCardDrop
+
+let xDistance = lastChildPositionObj.x - dropCardPositionsObj.x
 
     // card returning to foundation pile from drop pile, so card displays non-cascaded, which is how cards display on the foundation piles, set class attribute as below
     dropCard.setAttribute('class', 'cardEl card-transition duration-undo')
@@ -2579,12 +2757,14 @@ let xDistance = originPositionObj.x - dropCardPositionsObj.x + 17
       dropCard.setAttribute('class', 'cardEl card-border')
 // remove the translation
       dropCard.style.transform = `translate(${0}px, ${0}px)`
-      dropCard.removeAttribute('transform')
+  
       // RETURN / APPEND DROP CARD (to foundation pile)
   originPileElement.append(dropCard)
     }, 550);
 
-  
+    setTimeout(() => {
+      originPileElement.lastChild.style.transform = ``
+    }, 600);
  // CODE FOR TRANSITION ------------------------------------
          
   
@@ -2617,7 +2797,7 @@ let xDistance = originPositionObj.x - dropCardPositionsObj.x + 17
   
   
   }else{// END CARD WAS NOT FLIPPED BY DROP CARD - DROP CARD HISTORY
-  
+  // by inference, this could not be a king because a king cannot sit on an already flipped card. It would have been any other card
   console.log('end card was face up before drop card moved')
 
   
@@ -2661,12 +2841,14 @@ let xDistance = originPositionObj.x - dropCardPositionsObj.x + 17
       dropCard.setAttribute('class', 'cardEl card-border')
 // remove the translation
       dropCard.style.transform = `translate(${0}px, ${0}px)`
-      dropCard.removeAttribute('transform')
+   
       // RETURN / APPEND DROP CARD (to foundation pile)
   originPileElement.append(dropCard)
     }, 550);
 
-  
+    setTimeout(() => {
+      originPileElement.lastChild.style.transform = ``
+    }, 600);
  // CODE FOR TRANSITION ------------------------------------
          
   
@@ -2755,7 +2937,7 @@ allFoundationElements.forEach((foundation, foundationIndex) =>{
   console.log('dropCard')
   console.log(dropCard)
   // remove empty pile boarder now that card has returned to origin empty pile
-  originPileElement.style.cssText = 'border-style: none;'
+  pileOutlineRemove(originPileElement)
 
 
 
@@ -2784,13 +2966,19 @@ let dropCardPositionsObj = {
 
 
 // the y translaction can be calculated using the bottom of the foundation pile and the bottom of the card.  
-let yDistance = originPositionObj.bottom - dropCardPositionsObj.bottom
+let yDistance = originPositionObj.y - dropCardPositionsObj.y
 
 let xDistance = originPositionObj.x - dropCardPositionsObj.x + 17
 
     // card returning to foundation pile from drop pile, so card displays non-cascaded, which is how cards display on the foundation piles, set class attribute as below
     dropCard.setAttribute('class', 'cardEl card-transition duration-undo')
     dropCard.style.transform = `translate(${xDistance}px, ${yDistance}px)`
+
+    // IS THE ORIGIN PILE EMPTYIED BY UNDO? NOTE: only ACE undo's from the foundation piles will cause it to be empty so if the raw value of the card is below 5 execute the empty foundation funcion
+if(parseInt(dropCard.id) < 5){
+  emptyFoundation(foundation)
+}
+
     setTimeout(() => {
       
       // STLYING NOTE: foundation pile undone to drop pile so the styling class attribute has to change from 'foundationCardEl' to 'cardEl' as below; 
@@ -2800,19 +2988,17 @@ let xDistance = originPositionObj.x - dropCardPositionsObj.x + 17
       dropCard.setAttribute('class', 'cardEl card-border')
 // remove the translation
       dropCard.style.transform = `translate(${0}px, ${0}px)`
-      dropCard.removeAttribute('transform')
+  
       // RETURN / APPEND DROP CARD (to foundation pile)
   originPileElement.append(dropCard)
     }, 550);
 
+    setTimeout(() => {
+      originPileElement.lastChild.style.transform = ``
+    }, 600);
+
+
   // TRANSFORM TRANSLATE CODE : END ------------------------------
-
-
-
-
-
-
-
 
 movedCardTracker = foundationTracker[foundationIndex]
 MovedCardObject = movedCardTracker[movedCardTracker.length - 1]
@@ -2928,7 +3114,7 @@ destinationPileElement = pile;
     console.log('dropCard')
     console.log(dropCard)
     // remove empty border
-    originPileElement.style.cssText = 'border-style: none;'
+    pileOutlineRemove(originPileElement)
 
     movedCardTracker = dropPileTracker[pileIndex]
 MovedCardObject = movedCardTracker[movedCardTracker.length - 1]
@@ -3264,6 +3450,9 @@ tempGroupObjectsArray.shift()
   }
   removeCardObjects(groupElementsValue)
   
+
+  // since the undo included a king, the destination pile is now empty so place the outline on the pile
+  emptyPileOutline(destinationPileElement)
 }
 
     // remove card's object from destination pile at the end with the other cards
@@ -3296,7 +3485,7 @@ let newWrapper = document.createElement('div')
 // correctly the wrapper should be inserted to the DESTINATION rather than the origin
 let wrapperParent = groupStartCard.parentNode
 
-// use end card object width as a guide for the wrapper width
+// use end card widh width as a guide for the wrapper width
 newWrapper.setAttribute('width', groupStartCard.getBoundingClientRect().width)
 
 newWrapper.setAttribute('id', 'temp-wrapper')
@@ -3308,6 +3497,7 @@ newWrapper.style.cssText = 'height: fit-content;'
 
 // insert wrapper and then check destination pile to see it has worked. 
 wrapperParent.insertBefore(newWrapper, groupStartCard)
+// apend each of the card elements saved in realElements to the wrapper
 realElements.forEach(child =>{
   newWrapper.append(child)
 })
@@ -3315,11 +3505,13 @@ realElements.forEach(child =>{
 
 
 
-console.log('checking wrapper element has appended and elements are appended to it')
+console.log('checking wrapper element is appended to destination pile and undo card elements are appended to it')
 console.log(wrapperParent)
+
 // elements successfully appended to the wrapper...  NOW IT'S A MATTER OF GETTING ORIGIN POSITION DETAILS AND WRAPPER POSITION DETAILS. 
 let wrapperPositions = newWrapper.getBoundingClientRect()
 let wrapperPositionObj = {
+  'top': wrapperPositions.top,
   'x': wrapperPositions.x,
   'y': wrapperPositions.y
 }
@@ -3329,15 +3521,21 @@ let wrapperPositionObj = {
 let originPositions = originPileElement.getBoundingClientRect()
 // create an object for the positions
 let originPositionObj = {
+  'top': originPositions.top,
   'x': originPositions.x,
   'bottom': originPositions.bottom
 }
 
 let xDistance = originPositionObj.x - wrapperPositionObj.x +17
-let yDistance = originPositionObj.bottom - wrapperPositionObj.y
+let yDistance = originPositionObj.top - wrapperPositionObj.y
 
 console.log('wrapper positions')
 console.log(wrapperPositionObj)
+
+console.log('origin pile positions')
+console.log(originPositionObj)
+
+
 
 console.log('distances: x, y')
 console.log(xDistance, yDistance)
@@ -3353,6 +3551,7 @@ setTimeout(() => {
 
   // reset translation
 newWrapper.style.transform =  `translate(${0}px, ${0}px)`
+
   originPileElement.append(newWrapper)
 
   // REMOVE WRAPPER - while new wrapper has a first child
@@ -3376,22 +3575,6 @@ realElements = []
 // -------  END OF APPENDING ALL CARDS BACK TO ORIGIN -------------
 // forgotten to remove the end card elements from destination. 
 // -- ALL TRACKING COMPLETE REPOSITIONING; REMOVE CARD ELEMENTS
-
-// REMOVE UNDO CARDS FROM DESTNATION PILE
-function removeCardElements(howMany){
-  destinationPileElement.removeChild(destinationPileElement.lastChild)
-  howMany --
-  if(howMany > 0){
-    removeCardElements(howMany)
-  }else{
-    console.log('all cards removed')
-  }
-  
-  
-  }
-  removeCardElements(groupElementsValue)
-  
-
 
 
 }else{ // SINGLE CARD UNDO 
@@ -3466,6 +3649,8 @@ tempBreadCrumb = []
         endCardPileTracker.push(newUndoObj)
         // remove card's object from destination pile
 movedCardTracker.pop()
+// king undo leaves an empty pile
+emptyPileOutline(destinationPileElement)
   }else{
     // CARD IS NOT A KING - move back to empty pile
 
@@ -3516,9 +3701,16 @@ let dropCardPositionsObj = {
 
 
 console.log('drop card position details')
-console.log(dropCardClientPositions)
+console.log(dropCardPositionsObj)
+
+
+console.log('origin pile position details')
+console.log(originPositionObj)
+
+
+
 // the y translaction can be calculated using the bottom of the foundation pile and the bottom of the card.  
-let yDistance = originPositionObj.bottom - dropCardPositionsObj.bottom
+let yDistance = originPositionObj.y - dropCardPositionsObj.y -100
 
 let xDistance = originPositionObj.x - dropCardPositionsObj.x + 17
 
@@ -3534,17 +3726,20 @@ let xDistance = originPositionObj.x - dropCardPositionsObj.x + 17
       dropCard.setAttribute('class', 'cardEl card-border')
 // remove the translation
       dropCard.style.transform = `translate(${0}px, ${0}px)`
-      dropCard.removeAttribute('transform')
+
       // RETURN / APPEND DROP CARD (to foundation pile)
   originPileElement.append(dropCard)
     }, 550);
+
+    setTimeout(() => {
+      originPileElement.lastChild.style.transform = ``
+    }, 600);
 
   // TRANSFORM TRANSLATE CODE : END ------------------------------
   // STLYING NOTE: single card undo, drop pile to drop pile, so no need to change styling class
 
 
-// APPEND CARD HERE 
-  originPileElement.append(dropCard)
+
 
 
 
@@ -3580,10 +3775,146 @@ if(breadcrumbArray.length < 1){
 
 
 
+let commandUnwrap = 0;
+let commandNothing = 0;
 
 
 
 
+
+
+// when multi card drop is unsuccessful, remove the wrapper on the origin  pile
+const autoResetGo = (pile,object,wrapper, command, commandString) =>{
+
+  console.log('auto reset go running')
+
+  console.log('command value')
+  console.log(command)
+  console.log('command string')
+  console.log(commandString)
+
+
+
+
+// command will have a value of less than three only if a wrapper was found on the pile, otherwise command will have an integer value of at least 5, because all the id lengths accumulate to give the total lengths of all card id's added together. 
+
+// that means that there's a child in the clicked pile that has an id length of '2' digits or less so it must be a wrapper element so we can remove it (also the 'pile.childNodes.length > 0' ensures that if the exited pile contains no childnodes, then the For Loop for setting children attributes to 'draggable, true' does not run: previously, before adding the childnodes.length condition there was an error being thrown back)
+  let wrapperElement = document.getElementById(wrapper.id)
+  var parent = wrapperElement.parentNode
+  // console.log(object)
+   if(wrapper.length > 1){
+
+  }
+
+
+  let children = wrapper.childNodes
+  // ERROR HERE possibly - we should be checking wrapper childnodes length.. SORTED - we had the delete wrapper elements inside the loop. So the children were being removed from the wrapper before they could have the draggable attribute reset because they were no longer inside the wrapper.  So; moved the unwrap functioun outside of the loop and placed it AFTER the loop. So, once the loop is complete and all children attributes are reset, we then unwrap the wrapper and delete it.... PROBLEM SOLVED. 
+
+           // loop through children to add draggable:true; attribute
+  for(i = 0; i < object.length ; i++){
+  
+    // set each card to draggable true
+    children[i].setAttribute('draggable', 'true')
+    // remove the red outline on each card
+    children[i].classList.remove('multi-style')
+  }
+
+
+
+      // for unwrapping the multiple dragged cards
+
+// essentially, if wrapper has a first child, then, insert it before wrapper element, so eventually this will happen until there are no more children
+while (wrapperElement.firstChild) parent.insertBefore(wrapperElement.firstChild, wrapperElement);
+
+// remove wrapper from pile once no more first children exist
+parent.removeChild(wrapperElement);
+// ok, this actually works so now 
+
+
+
+
+  // console.log(pile)
+  // to check their draggability
+}
+
+
+
+
+const resetUndropped = (originPile, wrapper, firstCard) =>{
+
+  console.log('logging arguments to resetUndropped function AND clearing temporary drag card array')
+  tempDragCardArr = []
+console.log('originPile')
+console.log(originPile)
+console.log('wrapper')
+console.log(wrapper)
+console.log('firstCard')
+console.log(firstCard)
+
+wrapper.childNodes.forEach(child =>{
+  // set each card to draggable true
+  child.setAttribute('draggable', 'true')
+  // remove the red outline on each card
+  child.classList.remove('multi-style')
+}
+)
+
+// this insertBefore takes the first child in the wrapper and inserts it before the wrapper, which shifts the second child to first position and that NEW first child is then inserted before the wrapper.  This continues until there are no more children left in the wrapper - then the wrapper can be deleted. 
+while ( wrapper.firstChild) originPile.insertBefore( wrapper.firstChild,  wrapper);
+
+// remove wrapper from pile once no more first children exist
+originPile.removeChild( wrapper);
+// ok, this actually works so now 
+
+}
+
+
+
+
+
+// when multi card drop is successful, remove the wrapper on the destionation pile
+const multiReset = (wrapper) =>{
+  console.log('wrapper')
+  console.log(wrapper)
+  // check if object has children, i.e. is a wrapper
+  let wrapperElement = document.getElementById(wrapper.id)
+  console.log(wrapperElement)
+  
+  let hasChildren = wrapper.childNodes.length
+  if(hasChildren > 0){
+  // if true, give child nodes a variable so we can add or remove attributes and classes
+  let children = wrapper.childNodes
+  
+  if(hasChildren > 0){
+  // console.log('multiple cards')
+  // console.log('children')
+  // console.log(children)
+  }
+  
+  // loop through children to add attributes
+  for(i = 0; i < hasChildren; i++){
+    children[i].setAttribute('draggable', 'true')
+    children[i].classList.remove('multi-style')
+   
+    // push the children to a temporary array
+  }
+  
+  // CONSOLE console.log(wrapperElement)
+  
+  // for unwrapping the multiple dragged cards
+  var parent = wrapperElement.parentNode
+  // console.log(parent.childNodes)
+  while (wrapperElement.firstChild) parent.insertBefore(wrapperElement.firstChild, wrapperElement);
+  parent.removeChild(wrapperElement);
+  // ok, this actually works so now 
+   
+  
+  }else{console.log('single card')}
+  }
+  
+
+// variable to prevent re-executing of empty deck state (which only needs to happen once) once the pick pile and waste pile are empty. When both empty, they can never retrieve cards
+let emptyDeckValue = 0;
 
 
 
@@ -3592,58 +3923,18 @@ const drop = (event) =>{
   console.log('logging drop event')
 console.log(event)
 
-// a possible solution for being able drop cards onto a pile without having to carefully position the card, i.e. as long as the card is over the pile, then a drop can be made; currently if the card is over the pile but has triggered one of the children in the pile, i.e. another card, then the drag card will not drop because the intended target is a drop pile.  The plan is to check the id of the event.target, and if it contains the string '.png', then use the parent node as the source element.  NOt sure this is possible. 
-
 // use the cardParent variable identify the intended target pile, even when the drop target is another card rather than the pile
 let cardParent
 
 // if the drop target is a card
 if(event.target.id.includes('.png')){
-
-  // log the message
-  console.log('target is a card')
   // then use the card's parent for the card parent variable
   cardParent = event.target.parentNode
-  // check parent in console
-  console.log(cardParent)
 }else{
-  // otherwise the event target is one of the piles 
+  // otherwise the event target a pile 
   cardParent = event.target
 }
 
-
-
-if(cardParent.id.includes('foundation')){
-  let specificPile = cardParent.id;
-  switch(specificPile){
-    case 'foundation-one':
-      foundationPileOne.style.backgroundImage = ''
-    break;
-
-    case 'foundation-two':
-      foundationPileTwo.style.backgroundImage = ''
-    break;
-
-    case 'foundation-three':
-      foundationPileThree.style.backgroundImage = ''
-    break;
-
-    case 'foundation-four':
-      foundationPileFour.style.backgroundImage = ''
-    break;
-
-  }
-}
-
-
-// foundationPilesEl.forEach(foundation =>{
-//   console.log(foundation)
-//   // foundation.childNodes.cssText = 'margin-top:0px;'
-//   if(foundation.children.length > 0){
-//     console.log(foundation.children)
-//     // foundation.children.style.cssText = 'margin-top:0px;'
-//   }
-// })
 
 
 // ASSESS CONDITION OF WASTE PILE AND PICK PILE HERE ---------
@@ -3651,34 +3942,26 @@ if(cardParent.id.includes('foundation')){
  
  cardParent.style.opacity = "1";
 
-  // remove pile highlight
-
-
- 
-    // the rest of the function can only continue if data can be extracted from event.dataTransfer (if the card fails to drop, there will be no data available so we want to prevent an attempt to use the data to find the drop object id)
-
-  // THIS COULD BE IN A FUNCTION 
-  // get id data from dragged card
-  console.log('checking data transfer object')
-  console.log(event)
 
   if(event.dataTransfer.getData("text/plain")){
   const id = event.dataTransfer.getData("text/plain");
+  console.log('id')
+  console.log(id)
   let dataTransferArray = []
 dataTransferArray.push(id)
   // create new object using id 
   const newObj = document.getElementById(id);
-
+  // NOTE: newObj is the actual wrapper and not the card because this id is a stringified integer value (not including the .png)
+console.log(newObj)
   // IF OBJECT DOES NOT DROP, THEN HALT DON'T RUN THE REST OF THE FUNCTION AND RENDER THE ALERT
   if(newObj == null){
     alert('card was not dropped')
+  
   }else{
-console.log('card dropped successfully')
+// console.log('card dropped successfully')
 
   
-console.log('new object test')
-console.log(newObj)
-  console.log(dataTransferArray )
+
   // extract integer value from id
 let objBaseValue = parseInt(newObj.id)
 // convert number to card's true value
@@ -3706,16 +3989,11 @@ console.log(foundation)
 }
 
 
-
-// pick each foundation pile one by one and send them to the compare function
-
-
-// if needed, convert waste cards to normal cards, since waste cards are only dragged as single cards, and there is no wrapper to unwrap, we can avoid both multiReset and autoResetGo if on conversion and just prevent default.  No need to run faceUp either because they don't come from a drop pile. but preupdateWaste needs to run. 
-
-
 // LAST GATE FOR CARD DROPS
 const cardType = (object) =>{
 
+  console.log('object')
+  console.log(object)
 
 // CHECK CLASS LIST ATTRIBUTE ON CARD
 let objectType = object.getAttribute('class')
@@ -3734,24 +4012,19 @@ if(objectType.includes('dragging')){
 
   console.log('waste card object dropped elsewhere');
   console.log(object);
-// the card loses its status as waste card and becomes a normal card
-// if the card from the waste pile drops on a foundation pile then give it the foundationCardEl class which changes its style properties so that the card displays directly above the card it sits on; only the top card will display. 
+// if waste pile card drops on a foundation pile then give it the foundationCardEl class which causes the card to stack directly on top of the previous card (so foundation cards don't cascade)
     if(cardParent.id.includes('foundation')){
       object.setAttribute('class','foundationCardEl')
       object.classList.remove('cardElWaste');
     }else{
-
+      // otherwise give the cardEl class which causes the card to cascade on a drop pile
+      object.setAttribute('class','cardEl card-border')
     }
 
 
 
-    // FUNCTION FOR DEALING WITH WASTE CARD DROP
-    preUpdateWaste(object)
 
-    // NOTE: preUpdateWaste is for when the drop card is a waste pile card.  The card drops to the destination further down inside this current function; but then the waste pile needs updating because there are no physical cards on the pile, but rather, just the array representation of the cards currently on the pile. That array is updated, and then, the next card image is selected based on an array element in a specific position on the array (zero position).  This is where dropped waste cards differ from dropped foundation or regular pile cards.  In the left behind ordinary piles, the card is already in place, or there is no card at all, so there is no need to create an element to place in the origin pile.  The waste pile on the other hand needs this to be done.   
-
-
-    // later on I'll be having 3 cards display on the origin pile so this will alter things slightly where, only when the waste pile has > 3 cards will the update waste function be needed. 
+ 
   }
 
 
@@ -3769,6 +4042,9 @@ if(cardParent.id.includes('foundation')){
 
   console.log('target is foundation pile, change card class from cardEl to foundationCardEl')
   cardParent.appendChild(object)
+
+
+
 styleFoundationElement(object, cardParent)
 }else{
   // if the drop card doesn't have the cardEl property when it is appended to a drop pile then add the class
@@ -3782,6 +4058,29 @@ cardParent.appendChild(object)
   }
 
 }
+
+
+  // EXECUTE UN-WRAP WRAPPER FUNCTION
+  multiReset(newObj)
+
+
+  // conditions to decide if the waste pile needs cascading - this needs to happen after drop card that is a waste pile top card has dropped, because the cascadeWastePile function needs the 'previous' top card of the waste card pile as its second argument, otherwise the drop card (not yet dropped) would be the argument, and would receive the wrong cascade information. 
+
+// the top two cards should shift to show a three-card cascade only if there are more than two cards on the waste pile.  
+if(wastePile.childNodes.length > 2){
+  cascadeWastePile(3, wastePile.lastChild)
+  
+    
+  }else if(
+    // The top card only should shift,  to show a two-card cascade if there are only two cards on the waste pile
+    wastePile.childNodes.length > 1){
+    cascadeWastePile(2, wastePile.lastChild)
+  
+  }else if(wastePile.childNodes.length > 0){
+    wastePile.firstChild.setAttribute('draggable', true)
+  }
+
+
 
 
 // once any card has been moved from drop piles or pick piles the undo button will appear - when the game is solved breadcrumbs will be cleared so button will disappear, preventing accidental use of the undo button after game completion. 
@@ -4083,8 +4382,6 @@ originArrayLength = originTrackerArray.length
 
 
 
-// all cards apart from the first are showing, so the arrays need to be populated immediately after shuffle. Face down cards should also be included.
-
 }
 
 // -----------------------------------------------------------
@@ -4293,21 +4590,20 @@ faceUp()
 
 
 
-multiReset(newObj) // this removes the red border and wrapper
+
 
 // give empty drop piles a visible border for easy locating
 dropPilesEl.forEach(function(cardPile){
   if(cardPile.childNodes.length < 1){
-cardPile.style.cssText = 'border-style: solid;background-color:none; border-color:yellow; border-width:2px;'
-
-    }else{cardPile.style.cssText = 'border-style: none;'}
+    emptyPileOutline(cardPile)
+    }else{pileOutlineRemove(cardPile)}
   })
 
   // give empty foundation piles visible border for locating  
-    foundationPilesEl.forEach(function(cardPile){
+  foundationPileMainArray.forEach(function(cardPile){
       if(cardPile.childNodes.length < 1){
-    cardPile.style.cssText = 'border-style: solid;'
-            }else{cardPile.style.cssText = 'border-style: none; background-color:none;';}
+        emptyFoundation(cardPile)
+            }else{foundationPileStyle(cardPile)}
 })
 
   }
@@ -4551,101 +4847,17 @@ tempDragCardArr.pop()
 
 // ALL CARDS ORIENTATION ASSESSMENT ----------------------------------------------------------------------------------------------------------------
 
-let faceDownCards;
 
 
 
-// trying this function on waste card drops
+// function to prepare game for auto solve
 
-// the below condition applies when all pick cards have been  distributed, with the exception of 'one' card, the only card in the waste pile and which is face up; if true, then all cards originating in the pick pile are now faceup and distributed.
-console.log('wasteCardTracker')
-console.log(wasteCardTracker)
-console.log('pickCardTracker')
-console.log(pickCardTracker)
+function setEmptyDeckState(){
 
-// WHEN PICK DECK CARDS ARE SPENT
-if(wasteCardTracker.length < 1 && pickCardTracker.length === 0){
-  // reset facedown cards for each time the check runs. 
- faceDownCards = 0;
-  console.log('pick pile and waste pile are empty')
+if(emptyDeckValue < 1){
+    // increment empty deck value so that the setting of the empty deck state cannot be repeated (since, this causes unecessary cards to accumulate on the pick pile and waste pile)
+    emptyDeckValue ++
 
-console.log(`auto solve possible variable ${autoSolvePossible}
-
-if auto solve variable is zero CARD ORIENTATION CHECK WILL RUN
-`)
-  // if autosovepossible variable is 0 the check for card orientation will be done and will continue to be done on every card drop after the pick deck is empty, until all cards are face up; at which point  the autosolvepossible variable will be incremented to '1'. The check will no longer run since the conditions for checking is no longer met.  Once cards are face up they cannot become facedown again so once they are all face up, the condition remains until the end of the game.   
-  if(autoSolvePossible < 1){ 
-
-allPileElements.forEach(pile =>{
-
-  // variable for number of populated piles:
-  let populatedPiles = 7;
-  // variable to be incrimented if specific pile first card is face up 
-  let faceUpFirstChild = 7;
-  // if the pile is populated
-
-  let variableDifference = populatedPiles - faceUpFirstChild
-  if(pile.firstChild){
-// retain populated pile (variable only reduces if a pile is empty)
-    populatedPiles = populatedPiles
-  // get 'draggable' attribute value of first child
-  let draggableState = pile.firstChild.getAttribute('draggable')
-  // if draggable: TRUE
-  if(draggableState === true){
-    // retain faceUpFirstChild value
-    faceUpFirstChild = faceUpFirstChild
-  }else{
-    // otherwise decrement faceUpFirstChild previous value
-    faceUpFirstChild --
-  }
-
-  }else{
-    // pile is empty so decrement number of piles variable
-    populatedPiles --
-    // since pile is empty, there is no face down card on that pile, so decrement
-    faceUpFirstChild --
-  }
-
-// NOTE ON THE LOGIC FOR THE ABOVE LOOP - if the populated pile variable decrements by 1, then the face up first child variable must decrement by 1; the converse is NOT true. If the faceUpFirst variable is decremented by 1, the populated pile doesn't necessarily have to decrement. This is because the if the pile is populated the populated variables doesn't decrement, but if the first card is face down, then the first card variable does.  After the loop is complete, the populated pile variable will either be equal to or greater than the first child face up variable. Therefore the difference of the two variable will either be zero, if the variables are equal to each other, otherwise the difference variable will be equal to or greater than 1. 
-
-
-  if(variableDifference === 0){
-    // then for every populated pile, the first card is face up so there are no facedown cards
-    faceDownCards = 0
-    // increment autoSolvePossible variable since the function is no longer needed as all cards are face up; and it is not possible to reverse that scenario using conventional moves. an autoSolvePossible value of greater than zero causes the loop to be ignored. 
-    autoSolvePossible ++
-  }else{
-    // this number will be 1 or greater. so there are still faceup cards
-    faceDownCards = variableDifference
-  
-
-    console.log('there are still facedown cards')
-  }
-
-
-})
-
-
-// after loop has run if the number of populated piles is equal to the number of face up first child pile elements, then all the first card of each populated pile is face up and therefore all drop pile cards are face up.  The two variables can replace the faceDownCards variable using equality on integer numbers. But first check that populated piles =  
-
-
-// with the parent condition met, ONCE ALL CARDS ARE FACEUP, the game can be solved. 
-if(faceDownCards === 0){ // all cards are facing up, and game completion must be possible. So give player the option to auto complete game. NOTE* if the player continues the game, there is no need to re-run this function because this current condition always applies; pick cards and all other cards are already facing upward. 
-  console.log('auto solve is possible')
-
-  console.log('all cards are facing up - show solve button')
-
-
-
-// SHOW AUTO SOLVE BUTTON
-
-  solveBtn.style.cssText = 'display:block;'
-
-
-  alert('would you like to auto solve this game? if so click the solve button')
-
-// 
-undoBtn.style.cssText = 'display:none;'
   // CHANGE IMAGES FOR PICK PILE AND WASTE PILE
     // CREATE NEW IMAGE ELEMENT
     let newDefaultImage = document.createElement('img')
@@ -4674,22 +4886,122 @@ undoBtn.style.cssText = 'display:none;'
     newremainImage.classList.add('card-border')
     // APPEND IMAGE
     remainPile.append(newremainImage)
-  
 
-}else{
 
-  console.log('some cards are still face down')
-  // do nothing - the game can only be solved once all cards are face up so although  autoSolvePossible variable will only increment at that point if it is ever reached. 
 
 }
+  
+
+
+  
+
+}
+
+
+
+
+// WHEN PICK DECK CARDS ARE SPENT
+if(wasteCardTracker.length < 1 && pickCardTracker.length === 0){
+
+// set empty deck state to change pick pile and waste pile cards to show no more cards are left. 
+// set up arrays and game images ready for auto solve
+setEmptyDeckState()
+
+ 
+  console.log('pick pile and waste pile are empty')
+
+console.log(`auto solve possible variable ${autoSolvePossible}
+
+if auto solve variable is zero CARD ORIENTATION CHECK WILL RUN
+`)
+  // if autosovepossible variable is 0 the check for card orientation will be done and will continue to be done on every card drop after the pick deck is empty, until all cards are face up; at which point  the autosolvepossible variable will be incremented to '1'. The check will no longer run since the conditions for checking is no longer met.  Once cards are face up they cannot become facedown again so once they are all face up, the condition remains until the end of the game.   
+  if(autoSolvePossible < 1){ 
+
+    // December 22nd changes: - changing the position of these two variables.  I think they were in the wrong place.  Because, having them inside the allPileElements.forEach() loop, means that they are reset each time a pile is check, which is not the desired behaviour. What is needed is for both the numbers to accumulate over the course of checking all piles, so that the values can be compared after the loop is finished.  
+
+
+      // variable for number of populated piles:
+  let populatedPiles = 0;
+  // variable to be incrimented if specific pile first card is face up 
+  let faceUpFirstChild = 0;
+  // if the pile is populated
+  let variableDifference;
+
+allPileElements.forEach(pile =>{
+
+  // if the pile contains cards
+  if(pile.childNodes.length > 0){
+// increment populated piles total
+    populatedPiles ++
+  // get 'draggable' attribute value of the first card in the pile
+  let draggableState = pile.firstChild.getAttribute('draggable')
+  // if draggable: TRUE
+  console.log('draggableState')
+  console.log(draggableState)
+  if(draggableState == 'true'){
+    console.log('draggable card')
+    console.log(pile.firstChild)
+  //card is in the face up orientation: increment faceUpFirstChild 
+    faceUpFirstChild ++
+    console.log(faceUpFirstChild)
+  }else{
+    // otherwise card is facedown so keep previous value
+    faceUpFirstChild = faceUpFirstChild
+    console.log('non-draggable card')
+    console.log(pile.firstChild)
+    console.log(faceUpFirstChild)
+  }
+
+  }else{
+    // pile is empty so keep previous value
+    populatedPiles = populatedPiles
+
+    // December 22 changes: - NOTE ON FACEUP VALUE: Since faceUpFirstChild can only increment when a pile meets the condition requiring childnodes, and will not incriment if the card is facedown, the maximum value of faceUpFirstChild will always be less than or equal to the value of populatedPiles once the loop is complete. If the faceUpFirstChild is less than populatedPiles, there is at least one facedown card among the piles that still have cards. IF the values are equal, then there are no facedown cards among the piles, and therefore the game is solvable. 
+ 
+  }
+
+  variableDifference = populatedPiles - faceUpFirstChild
+})
+
+
+   // December 22nd changes: - changing the position of the variable difference condition because this is also in the wrong place. The calculation needs to be done outside of the allPileElements.forEach() loop, after it is complete, not every time a pile is checked, because, the result of 'variableDifference = populatedPiles - faceUpFirstChild' should be checked using the maximum values of the two variables in the right hand side of the above calculation; the max values are only available once all piles have been checked. Moving this outside of the loop
+
+   console.log('variable difference')
+   console.log(variableDifference)
+   if(variableDifference === 0){
+
+    // inform user that the auto solve feature is available
+    alert('would you like to auto solve this game? if so click the solve button')
+
+
+    // will remove the undo button for now; it can probably stay but is ultimately redundant since the game is so close to the solved state by the time there are no face down cards left. 
+    // 
+undoBtn.style.cssText = 'display:none;'
+
+    // the number of populated piles is equal to the number of face up first cards. The game is solvable
+    
+  // SHOW AUTO SOLVE BUTTON
+  solveBtn.style.cssText = 'display:block;'
+
+    // incriment autoSolvePossible to stop the pile check from happening again.  Once a card is face up on a drop pile, it cannot be oriented facedown again so once all the piles have their first card in the faceup orientation, it remains that way until the end of the game. So executing the check again is redundant
+        autoSolvePossible ++
+    
+
+
+      }else{
+
+        console.log('there are still facedown cards')
+      }
+
 }
 
 }else{
   
-  // console.log('piles not empty yet')
+  console.log('there are still cards in the pick pile or waste pile')
 
 }
 // END OF ALL CARDS ORIENTATION ASSESSMENT ------------------------------------------------------------------------------------------------------------------
+
 
 console.log(dropPileTracker)
 console.log(foundationTracker)
@@ -5002,58 +5314,6 @@ solveBtn.addEventListener('click', () =>{
 
 
 
-// if multiple cards are dropped this resets the cards to draggable 'true' and unwraps them, then deletes the wrapper from the drop pile
-const multiReset = (wrapper) =>{
-
-  
-// check if object has children, i.e. is a wrapper
-let wrapperElement = document.getElementById(wrapper.id)
-// console.log(wrapperElement)
-
-let hasChildren = wrapper.childNodes.length
-if(hasChildren > 0){
-// if true, give child nodes a variable so we can add or remove attributes and classes
-let children = wrapper.childNodes
-
-if(hasChildren > 0){
-// console.log('multiple cards')
-// console.log('children')
-// console.log(children)
-}
-
-// loop through children to add attributes
-for(i = 0; i < hasChildren; i++){
-  children[i].setAttribute('draggable', 'true')
-  children[i].classList.remove('multi-style')
- 
-  // push the children to a temporary array
-}
-
-// CONSOLE console.log(wrapperElement)
-
-// for unwrapping the multiple dragged cards
-var parent = wrapperElement.parentNode
-// console.log(parent.childNodes)
-while (wrapperElement.firstChild) parent.insertBefore(wrapperElement.firstChild, wrapperElement);
-parent.removeChild(wrapperElement);
-// ok, this actually works so now 
-
-// check card attributes in the drop pile
-// console.log(event.target) 
-
-
-
-
-
-// the calculation can be made when the pick source is empty, 
-/* 
-   
-*/
-// we might be able to use insertBefore to take the cards out of the wrapper and then we can delete it. 
-
-}else{console.log('single card')}
-}
-
 
 
 
@@ -5088,162 +5348,78 @@ dropPilesEl.forEach(function(element){
 
 
 // after looping through clicked to top card of pile we send the pile, clicked card and top card for selection - 
-const selectRange = (pile, start,object) =>{
+const selectRange = (pileArg, start,object) =>{
 
+// pile arg is origin pile
+// start is index of the selected card at origin pile
+// object is the drag card event object
 
+console.log(pileArg)
+console.log(object)
 
-
-
-let pileId = pile.id // we need pile id to grab element properly
-// switch id and use the pile that has matching id as element for start and end children in new range. 
-
-  
+ 
 let tempPile;
-
-switch(pileId){
-case pileOne.id: tempPile = pileOne
-break;
-case pileTwo.id: tempPile = pileTwo
-break;
-case pileThree.id: tempPile = pileThree
-break;
-case pileFour.id: tempPile = pileFour
-break;
-case pileFive.id: tempPile = pileFive
-break;
-case pileSix.id: tempPile = pileSix
-break;
-case pileSeven.id: tempPile = pileSeven
-break;
-}
-
-
-// console.log(start, pile.childNodes.length, object)
-
-let end = pile.childNodes.length;
-let testRange = new Range() // create new range
-// set parent pile and starting card's index
-testRange.setStart(tempPile, start); 
-
-// set 'element, this is actually the length of the pile, so the number is greater than the value of the last child index, so the last index is automatically selected as the end value'
-testRange.setEnd(tempPile, end);
+allPileElements.forEach(pile =>{
+  if(pile.id == pileArg.id){
+    tempPile = pile
+  }
+})
 
 
 
- // clear existing selection if any
-  document.getSelection().removeAllRanges();
 
-   // set  new range
- document.getSelection().addRange(testRange);
- // $(tempPile).multidraggable() // make pile multidraggable
+console.log(start, pileArg.childNodes.length, object)
 
-//  console.log('origin pile')
-//  console.log(testRange.endContainer.id)
-//  console.log('testRange')
-//  console.log(testRange.commonAncestorContainer.childNodes)
 
-// get the first card element from the array containing all card elements
+// get the selected card element from the array containing all card elements
   let firstCard = object[0]
-  // use parse the integer from the card id and use it as the id for the wrapper
+  // parse the integer part of the id and use it as the id for the wrapper
   let wrapperId = parseInt(firstCard.id)
-
-  // console.log('first card value - which is card id')
-  // console.log(wrapperId)
-
 
 // we could try to create a dive here, insert it into tempPile, and then append all items in the array to it, increase its z-index to above the cards and then make it draggable, and see if we can move it to another position. But then that would defeat whole purpose of multidraggable... Well, let's see. UPDATE = yes, it was right; we no longer needed the the multidraggable JQuery... I just removed the 'draggable function from the cards that we append to the div so that they could not be moved.  gave the wrapper an id of the base value of the first card, and then when it gets dropped that number is used to check the colour and true number of the div which, if suitable, allows the div to be dropped onto a card or an empty space.. WORKS LIKE A CHARM! 
 
 let wrapper = document.createElement('div') // div to wrap cards in
 wrapper.setAttribute('id',wrapperId) // give id (integer value of clicked card so when wrapper is dropped, drop handler can read it's id and extract true value and colour value which would match the clicked card to see if colour and number match criteria for dropping)
 
-// now check orientation of the page and give appropriate wrapper dimensions. If width > height, use landscape, or if width < height, use portrait
+//  the sumb difference of window height and window width will either be greater or less than zero depending on screen orientation. The calculation is used to decide which wrapper size to use so the cards fit nicely into the wrapper. 
 winW = window.innerWidth;
 winH = window.innerHeight
 winCalc = winW - winH
 
 
 if(winCalc < 0){
+  // use portrait wrapper
   wrapper.classList.add('wrapper-portrait')
 }else{
-
+// use landscape wrapper
   wrapper.classList.add('wrapper-landscape')
 }
 
 
+ // make draggable
+wrapper.setAttribute('draggable', 'true')
 
-wrapper.setAttribute('draggable', 'true') // make draggable
-tempPile.insertBefore(wrapper,firstCard) // insert into pile
-// console.log(tempPile)
-wrapper.addEventListener('dragstart', dragstartMulti)// add event listeners
+// save a copy for later use if the wrapper is intentionally not dropped
+// dragIdArray.unshift(wrapper)
+// insert into pile before selected card
+tempPile.insertBefore(wrapper,firstCard) 
+
+// add drag event listeners to wrapper
+wrapper.addEventListener('dragstart', dragstartMulti)
 wrapper.addEventListener('dragend', dragendMulti)
 
 for(i=0; i < object.length; i++){
-  wrapper.appendChild(object[i]) // append cards to be dragged
-  object[i].setAttribute('draggable', 'false')// make cards un-draggable
+   // append all stored cards to be dragged
+  wrapper.appendChild(object[i])
+// make cards un-draggable
+  object[i].setAttribute('draggable', 'false')
 
 }
-// now the wrapper can be dragged and dropped (if the id value allows for it)
-
-
-// BUT if the drop fails, or we change our minds and choose not to drag the wrapper, we need to make the undraggable cards dragabble again, and to unwrap the wrapper: those two things would have been done if the wrapper was dropped, but since in this scenario there is no drop we'll use the below function and in it, set a time delay of a couple of seconds before resetting the selected cards to their normal draggable, unwrapped state. 
+// now the wrapper can be dragged ( and dropped, if the id value allows for it)
 
 
 
 
-let commandUnwrap = 0;
-let commandNothing = 0;
-
-
-// since this settimeout is causing some issues of the card disappearing for over a second when the mouse button is released, we might as well try to ditch the time out and use mouseup instead, that might actually work better.  I've had to jig this function quite a bit to get a reasonable timing from card pickup  to card drop or reject - still working on it
-
-// if mouse is currently held down
-if(mouseDownArr[0] === 0){
-// console.log('mouse down')
-
-setTimeout(() => {
-      
-   
-  // console.log(pile.childNodes.length)
-  
-    for(i = 0; i<pile.childNodes.length; i++)
-    { 
-    // because the string '.png' is part of all card id's, the minimum length of any card id is 4 characters, because all cards have at least one digit as part of their id. So if the id length is less than three, i.e. 1 or 2, then the child in the pile must be a wrapper, because the wrapper id is the integer parsed from the first card of the selection.  This is how the wrapper is identified.  if the id length is not less than 3, then the child must be a card. If an id of length < 3 is found then the command unwrap variable will be incrimented, otherwise the commandNothing variable with be incrimented.  If commandUnwrap is zero, it means that no wrapper was found on the pile
-  if(pile.childNodes[i].id.length < 3){
-  commandUnwrap += pile.childNodes[i].id.length
-  }else{
-    commandNothing += pile.childNodes[i].id.length
-  }}
-  
-  // if commandUnwrap has no value then the auto reset go will not run, but if it does have a value then the reset function will run
-  if(commandUnwrap > 0){autoResetGo(pile,object,wrapper,commandUnwrap)}else{
-    // autoResetGo will only executed with the commandNothing argument if no wrapper was found
-    autoResetGo(pile,object,wrapper,commandNothing)}
-
-}, 3000);
-
-
-}else{
-// otherwise mouse has been released so wrapper needs to be unwrapped and cards need to stay in the pile of the original selection. 
-  setTimeout(() => {
-      
-   
-    // console.log(pile.childNodes.length)
-    
-      for(i = 0; i<pile.childNodes.length; i++)
-      { 
-      //  console.log(pile.childNodes[i].id.length)
-    if(pile.childNodes[i].id.length < 3){
-    commandUnwrap += pile.childNodes[i].id.length
-    }else{
-      commandNothing += pile.childNodes[i].id.length
-    }}
-    
-    // if commandUnwrap has no value then the auto reset go will not run, but if it does have a value then the reset function will run
-    if(commandUnwrap > 0){autoResetGo(pile,object,wrapper,commandUnwrap)}else{autoResetGo(pile,object,wrapper,commandNothing)}
-
-  }, 1500);
-
-}
 
       
    
@@ -5263,7 +5439,7 @@ dropPilesEl.forEach(function(cardPile){
 
 // NOTE 2.. we also need to deal with what happens if multiple cards are dropped back into their original pile because you change your mind. You'll need to unwrap them so perhaps we can make the unwrap function separate (which I think we already have; it's the multiReset function) - I think the conditions for this already exist in the drop() frunction, 
 
-// and you need to do multi-reset on from the foundation pile as well. this wasn't an issue before because when draging just one card, which is what we do to drop a card on a foundation pile, it wasn't wrapped in a container, but now even just 'one' selected card is wrapped so we need to unwrap it.  
+// and you need to do muhnblti-reset on from the foundation pile as well. this wasn't an issue before because when draging just one card, which is what we do to drop a card on a foundation pile, it wasn't wrapped in a container, but now even just 'one' selected card is wrapped so we need to unwrap it.  
 
 cardPile.addEventListener('mousedown', (event) => {
   // clear select array on double click 
@@ -5271,8 +5447,6 @@ cardPile.addEventListener('mousedown', (event) => {
   //console.log('NEW CARD SELECTED ----------------------------')
   selectArray = []
   dragIdArray = []
-
-
 
 
 
@@ -5285,7 +5459,11 @@ cardPile.addEventListener('mousedown', (event) => {
 
 
 let cardValue =  parseInt(target.id)
-
+console.log('cardValue')
+console.log(cardValue)
+if(!cardValue){
+  alert('no card value available')
+}
 
 // getting the object of the clicked card from the tracking array. 
 let pileIndex;
@@ -5299,61 +5477,139 @@ dropPileTracker[pileIndex].forEach(card =>{
 if(card.primary_card.card === cardValue){
 cardObj = card
 // console.log('object of selected card, with destination properties added')
-// console.log(cardObj)
+
 }
 })
   }
 })
 
+if(cardObj){
+  console.log('checking card object')
+console.log(cardObj)
+
+
+
+
 
 // THIS IS FOR CREATING THE DRAGGABLE GROUP
- // if draggable: true; get the HTML element
-if(attr == "true"){
-let totalSelected = 0;
-   // SEND THE PARENT ELEMENT TO SELECT ARRAY FOR LATER USE
-selectArray.push(parent)
-
-for(i=0; i < maxVal; i++){ // loop ALL of pile's children (cards)
- // when child[i] is target card
-if(children[i] == target){
-
-  // NOTE: there is probably a better way of doing this; i.e. getting the index of the child in the pile
-let j;
-for(j=i; j<maxVal; j++){ 
+ // if draggable: true; get the HTML element - this prevents cards that are face down being dragged. 
+ if(attr == "true"){
+  let totalSelected = 0;
+     // SEND THE PARENT ELEMENT TO SELECT ARRAY FOR LATER USE
+  selectArray.push(parent)
   
-// loop through parent pile from child[j] to last child
-// style selected child and all others up to the end of the pile (this style creates a red outline offset of 0.1vw)
-  children[j].classList.add('multi-style')
-  totalSelected ++;
-   // push index of children to array where parent is at index zero
-selectArray.push(j)
-   // push children to dragId array
-dragIdArray.push(children[j])
-// console.log(dragIdArray)
+  for(i=0; i < maxVal; i++){ // loop ALL of pile's children (cards)
+   // when child[i] is target card
+  if(children[i] == target){
+  
+    // NOTE: there is probably a better way of doing this; i.e. getting the index of the child in the pile
+  let j;
+  for(j=i; j<maxVal; j++){ 
+    
+  // loop through parent pile from child[j] to last child
+  // style selected child and all others up to the end of the pile (this style creates a red outline offset of 0.1vw)
+    children[j].classList.add('multi-style')
+    totalSelected ++;
+     // push index of children to array where parent is at index zero. It's possible for this to be just ONE card. 
+  selectArray.push(j)
+     // push children to dragId array
+  dragIdArray.push(children[j])
+  console.log('cards for adding to drag wrapper')
+  console.log(dragIdArray)
+  
+  }}}
+  
+  // use number of children pushed to dragIdArray (that's the number of cards to the end of the pile, inclusive of the selected card - i.e. the total number of cards to be dragged).  Each card is added to a wrapper later; the number of cards is used as the number of cards selected for dragging 
+  cardObj.total_selected = dragIdArray.length
+  
+  tempDragCardArr.push(cardObj)
+  
+  // console.log('breadcrumbs - last element is last card moved')
+  // console.log(tempDragCardArr[0])
+  // create an object from array entries with the indexes as keys
+  
+  setTimeout(() => {
+    console.log('mouse down status')
+  console.log(dragStatus)
+  }, 150);
+  
+  
+  selectRange(selectArray[0], selectArray[1], dragIdArray)
+  }else{
+  console.log('cannot drag a face down card')
+  
+  }
 
-}}}
 
-// use number of children pushed to dragIdArray (that's the number of cards to the end of the pile, inclusive of the selected card - i.e. the total number of cards to be dragged).  Each card is added to a wrapper later; the number of cards is used as the number of cards selected for dragging 
-cardObj.total_selected = dragIdArray.length
 
-tempDragCardArr.push(cardObj)
 
-// console.log('breadcrumbs - last element is last card moved')
-// console.log(tempDragCardArr[0])
-// create an object from array entries with the indexes as keys
 
-selectRange(selectArray[0], selectArray[1], dragIdArray)
+
+
+
+
+
+
+
+
+
+
+
+
 }else{
-console.log('cannot drag a face down card')
-
+  alert('no card object retrieved')
 }
 
 
 
 
 
+
 })
 })
 
 
+// December 23 changes: - removeAttribute('transform') was not working for undo cards.  When cards were undone, the transform attribute, although reset to zero for x and y positions seemed to be causing some sort of error where cards placed onto of the undone card appeard at a lower z-index so, although the new card was appended, the previous undone card appeared to be beneath the undone card. This was causing issues with multiple undo requests. 
 
+// instead of using the remove attribute method I decided to set the transform property to an empty string and that seems to have fixed the issue.  Cards dropping onto an undone card now sit corretly . 
+
+
+// December 23 changes: - The undo cards are acting strangely again, this is because of the minimum height styling on each pile. When there are very few cards on the pile, the min-height value results in a large gap between the end card bottom and the pile bottom. Since the transform is traveling to the pile bottom, the transform makes the card appear to travel to a significant distance away from the pile's end card, and then when the card appends, it makes a big jump to the correct position. This is especially noticeable when there is only one or two cards on the pile, but less evident if the pile has more; the 7 card pile shows almost no jump. 
+
+// I think the way around this would be to use the origin pile last child position values as a target for the undo card, and then adjust make a minor adjustment to compensate for the cascade effect.  Decided to use the waste pile top position and the card y position, and added some extra pixels for the cascade when there are two cards on the pile, and doubled the value for when there are three or more cards on the pile. This causes the card to target very close to the append position. There needs to be a way to get the card's margin left attribute so that this can be an exact value. 
+
+// FOUNDATION BACK TO WASTE PILE FIXED - cascade adjust included
+// DROP PILE TO WASTE PILE FIXED - cascade adjust included
+// DROP PILE UNDO TO FOUNDATION  - working perfectly
+// FOUNDATION BACK TO DROP PILE - cascade adjust not included yet
+
+// December 24 issues: - WASTE CARD DISPLAY PROPERTIES: noticed that drop pile cards have 'inline-block' display property but waste cards don't. Will have to check if this causes issues. 
+
+// 8.5 view width is actually the width of the wrapper (portrait) So the cards which land incorrectly on the foundation pile and then end up with that particular width seem to be taking on the wrapper dimensions. further investigation needed. 
+
+// the issue with the disappearing destination pile end card when multiple cards are undone inside a wrapper, only happens when the undo is to an empty drop pile.  So the undo from drop pile to populated drop pile is working and only needs to have the target adjusted so the wrapper moves smoothely to its destination before appending. 
+
+// CAUSE FOUND - the function to remove the undo cards total from the destination pile was still being used; although the cards were already physically removed from the pile because of the append method. Prior to this, clones were used and appended to a document fragment and then appended to the origin, leaving the original cards still in the destination piles which had to be removed.  But after abandoning the document fragment method (so that a transition could be applied) and using a wrapper div instead, those destination cards are what actually move back to the origin pile.  So they are not on the destination pile to be removed.    I've deleted the function for removing original cards on the destination pile. ISSUE SOLVED. 
+
+// CARD JUMP issue - NOW JUST NEED TO MODIFY TARGET INFORMATION SO THAT THE WRAPPER MOVES SMOOTHLY TO THE ORIGIN PILE. I'm considering removing the origin pile margin top when the pile is empty so that the wrapper moves smoothly to the approximate top positions of other piles   which are populated.  SOLVED: using origin pile 'top' position for y-translate calculation.  a much better transition occurs
+
+// card jump issue fixed for multiple card undo for both empty and populated piles.  There's a slight jump for the non empty pile, but barely perceptible. In the end I had to compensate for the margin top of the end card (for populated origin piles) and the origin pile itself when the pile was empty. Still a bit confused about how the negative margin top of the end card needs to be compensated for. I might create a function to log mouse positions on mouse clicks to see the if a click on the card top gives the position recorded for the card; perhaps the margin changes this. 
+
+// just a thought. The above issue could be happening because the drop cards, when appended to the wrapper, still have a negative margin top value; perhaps they are extending out of the wrapper and that's making them appear to be higher than intended. Changing the target makes them aim for a lower position, and that might be compensating for the negative margin of the cards. 
+
+// ANOTHER ISSUE FOUND: - TAPPING ON A CARD ALTERS ITS TRACKING OBJECT, EVEN IF THE CARD IS NOT DRAGGED.  So if I click on a card that's not at the top of a pile, its card object will show number selected to be how many cards down it is from the end of the pile; because the expected behaviour would be to actually drag the card.  - NOT TRUE: no tracking object is created if the card is just tapped, so no record is made of the number of cards selected. BUT THE ISSUE IS MORE COMPLICATED. If I tap a card, and then cover it with another, the breadcrumb array records the tapped card and not the covering card. Turns out that the tapped card object was still pushed to the tempDragCard array, which was then used in the breadcrumb, showing the wrong card as having the same origin and destination; this may be the cause of some undo issues - resulved this by clearing the array if a card is only tapped (using the unmoved card unwrap function)
+
+// ANOTHER ISSUE FOUND: - UNDOING MULTIPLE CARDS, EXPOSING AN EMPTY PILE LEAVES NO EMPTY BORDER SO IT APPEARS THAT THE CARDS CANNOT BE DROPPED... the logic for this goes as follows: Since a king drop to a drop pile can only occur if the pile is empty,  if either the first card in a multiple card undo from a drop pile, or the card of a single card undo from a drop pile is a king, the destination pile must have been empty prior to the king's arrival. Actually, if a king is included in a multiple card undo, it MUST be the first card, since it cannot sit on other cards. Essentially, if the undo move includes a king, then the undo leaves the destination pile empty, and the function which gives the empty piles a color border should be executed. 
+
+// FIXED MISSING EMPTY PILE BORDER/OUTLINE - BOTH CASES - 1) if a single undo card is a king or, 2) if the first card in a multiple card undo is a king, then run the empty pile outline function.  - 
+
+// DECEMBER 25 changes: - single card undo, drop pile to empty drop pile does a big jump instead of a transition; INVESTIGATE. SOLVED: there was a duplicate append outside of the settimeout, which was affecting the drop card. Removed the extra append method and all is working.  I'm not sure duplicate cards returning to an empty pile works correctly yet; will check code and find a scenario for testing. 
+
+// multiple card undo to empty pile also working correctly. 
+
+// NEXT COSMETIC ISSUE TO SOLVE - REMOVE EMPTY PILE MARGIN TOP, AND REPLACE WHEN PILE POPULATES - done
+
+// ANOTHER COSMETIC CHANGE. FOUNDATION PILES - when pile is unpopulated then the default card image appears; but when a card is dropped to the pile then the image disappears and some styling with box shadow is used on the pile.  If a card is removed, or an undo occurs leaving the pile empty then the image is reinstated. 
+
+
+// EMPTY PILE BORDER NOT SHOWING WHEN CARD UNDO FROM DROP PILE BACK TO WASTE PILE RESULTS IN AN EMPTY PILE

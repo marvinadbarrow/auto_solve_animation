@@ -964,6 +964,27 @@ For the undo, given that the cards elements have been pushed to the reaElements 
 
 now just to repeat the same for empty origin piles.  
 
+CHANGES MADE FOR GITHUB ON 17 DECEMBER
+
+// PILE SELECTION METHOD CHANGED
+In Range function, instead of switching pile argument and comparing it with each of every one of the pile variables with it and assigning the 'tempPile' variable with that pile id, I looped through the allPileElements array and assigned tempPile variable with the pile that had the same id as the pile argument to the function. 
+
+// FUNCTIONS FOR UNWRAPPING WRAPPER AFTER DROP OR FAILED DROP CHANGED
+changing how the wrapper is unwrapped at destination if successfully dropped, or at origin if drop fails or wrapper is released.
+-- instead of using a set timeout, I'm going to use the condition inside the drop function for successful drops or failed drops. There is a condition where neither of these occur so you'll have to figure out how to handle that scenario. 
+
+Below are the arguments that are sent to the multi reset and autoResetGo functions. 
+
+AUTO-RESET ARGUMENT
+pileArg,object,wrapper,commandNothing, 'no command'
+
+The above arguments can be found in the drop function
+pileArg = cardParent
+object = newObj[0]
+wrapper = newObj
+
+the multireset function should execute just after a drop on a drop pile
+
 
 
 
